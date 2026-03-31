@@ -1,0 +1,20 @@
+import request from './api';
+import type { AuthResponse, User } from '../types';
+
+export async function register(name: string, email: string, password: string, role: string): Promise<AuthResponse> {
+  return request<AuthResponse>('/users/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password, role }),
+  });
+}
+
+export async function login(email: string, password: string): Promise<AuthResponse> {
+  return request<AuthResponse>('/users/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getProfile(): Promise<User> {
+  return request<User>('/users/me');
+}

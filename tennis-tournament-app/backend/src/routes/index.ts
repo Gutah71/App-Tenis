@@ -1,16 +1,18 @@
 import { Router } from 'express';
+import userRoutes from './users';
+import leagueRoutes from './leagues';
+import tournamentRoutes from './tournaments';
+import matchRoutes from './matches';
 
 const router = Router();
 
-// ── Placeholder routes – replace with real feature routers as you build them ──
 router.get('/', (_req, res) => {
   res.json({ message: 'Tennis Tournament API v1' });
 });
 
-// Example:
-// import userRoutes from './users';
-// import tournamentRoutes from './tournaments';
-// router.use('/users', userRoutes);
-// router.use('/tournaments', tournamentRoutes);
+router.use('/users', userRoutes);
+router.use('/leagues', leagueRoutes);
+router.use('/tournaments', tournamentRoutes);
+router.use('/tournaments/:tournamentId/matches', matchRoutes);
 
 export default router;

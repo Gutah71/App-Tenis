@@ -10,13 +10,20 @@
 //   3. Remove or alias the types below — Prisma will generate them automatically.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type Role = 'ADMIN' | 'PLAYER';
+export type Role = 'PLAYER' | 'ORGANIZER';
 
 export type TournamentStatus =
   | 'DRAFT'
   | 'OPEN'
+  | 'FULL'
   | 'IN_PROGRESS'
   | 'FINISHED'
   | 'CANCELLED';
 
-export type Modality = 'SINGLES' | 'DOUBLES';
+export type MatchStatus =
+  | 'PENDING'
+  | 'PENDING_CONFIRMATION'
+  | 'CONFIRMED'
+  | 'DISPUTED';
+
+export type LeagueMemberRole = 'ADMIN' | 'MEMBER';
