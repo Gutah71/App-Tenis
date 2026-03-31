@@ -30,9 +30,10 @@ datasource db {
 //     Prisma enums: replace `String` with the enum type and uncomment the enum
 //     definitions below.
 //
-// enum Role             { ADMIN PLAYER }
-// enum TournamentStatus { DRAFT OPEN IN_PROGRESS FINISHED CANCELLED }
+// enum Role             { PLAYER ORGANIZER }
+// enum TournamentStatus { DRAFT OPEN FULL IN_PROGRESS FINISHED CANCELLED }
 // enum Modality         { SINGLES DOUBLES }
+// enum MatchStatus      { PENDING PENDING_CONFIRMATION CONFIRMED DISPUTED }
 
 // ── Models ────────────────────────────────────────────────────────────────────
 
@@ -41,38 +42,77 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  /// Valid values: "ADMIN" | "PLAYER"
+  /// Valid values: "PLAYER" | "ORGANIZER"
   role         String   @default("PLAYER")
+  avatarUrl    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  tournaments   Tournament[]   @relation("TournamentCreator")
-  registrations Registration[]
-  matchesAsP1   Match[]        @relation("Player1")
-  matchesAsP2   Match[]        @relation("Player2")
-  wonMatches    Match[]        @relation("Winner")
+  createdLeagues    League[]       @relation("LeagueCreator")
+  leagueMemberships LeagueMember[]
+  createdTournaments Tournament[]  @relation("TournamentCreator")
+  registrations     Registration[]
+  matchesAsP1       Match[]        @relation("Player1")
+  matchesAsP2       Match[]        @relation("Player2")
+  wonMatches        Match[]        @relation("Winner")
+  reportedMatches   Match[]        @relation("ReportedBy")
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  location    String
+  isPublic    Boolean  @default(true)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdBy   User           @relation("LeagueCreator", fields: [createdById], references: [id])
+  members     LeagueMember[]
+  tournaments Tournament[]
+}
+
+model LeagueMember {
+  id       String   @id @default(cuid())
+  leagueId String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  // Relations
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can only belong to a league once
+  @@unique([leagueId, userId])
 }
 
 model Tournament {
-  id              String           @id @default(cuid())
+  id              String   @id @default(cuid())
   name            String
   description     String?
   date            DateTime
   location        String
   maxParticipants Int
   /// Valid values: "SINGLES" | "DOUBLES"
-  modality        String           @default("SINGLES")
-  /// Valid values: "DRAFT" | "OPEN" | "IN_PROGRESS" | "FINISHED" | "CANCELLED"
-  status          String           @default("DRAFT")
+  modality        String   @default("SINGLES")
+  /// Valid values: "DRAFT" | "OPEN" | "FULL" | "IN_PROGRESS" | "FINISHED" | "CANCELLED"
+  /// Tournaments are created with status OPEN (set by the service layer)
+  status          String   @default("OPEN")
   prize           String?
   rulesPdfUrl     String?
+  isPublic        Boolean  @default(true)
+  passwordHash    String?
+  leagueId        String?
   createdById     String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   createdBy     User           @relation("TournamentCreator", fields: [createdById], references: [id])
+  league        League?        @relation(fields: [leagueId], references: [id])
   registrations Registration[]
   matches       Match[]
 }
@@ -94,20 +134,24 @@ model Registration {
 model Match {
   id           String   @id @default(cuid())
   tournamentId String
-  round        Int      // 1 = first round, 2 = second round, etc.
+  round        Int
+  /// Valid values: "PENDING" | "PENDING_CONFIRMATION" | "CONFIRMED" | "DISPUTED"
+  status       String   @default("PENDING")
   player1Id    String?
   player2Id    String?
   winnerId     String?
-  result       String?  // e.g. "6-3 7-5"
-  nextMatchId  String?  // Self-reference for bracket progression
+  result       String?
+  reportedById String?
+  nextMatchId  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  player1    User?      @relation("Player1", fields: [player1Id], references: [id])
-  player2    User?      @relation("Player2", fields: [player2Id], references: [id])
-  winner     User?      @relation("Winner", fields: [winnerId], references: [id])
-  nextMatch  Match?     @relation("BracketNext", fields: [nextMatchId], references: [id])
-  prevMatches Match[]   @relation("BracketNext")
+  tournament  Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player1     User?      @relation("Player1",    fields: [player1Id],    references: [id])
+  player2     User?      @relation("Player2",    fields: [player2Id],    references: [id])
+  winner      User?      @relation("Winner",     fields: [winnerId],     references: [id])
+  reportedBy  User?      @relation("ReportedBy", fields: [reportedById], references: [id])
+  nextMatch   Match?     @relation("BracketNext", fields: [nextMatchId], references: [id])
+  prevMatches Match[]    @relation("BracketNext")
 }
