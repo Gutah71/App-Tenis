@@ -1,10 +1,5 @@
 import prisma from '../lib/prisma';
 
-/**
- * Generates a single-elimination bracket for a tournament.
- * Players count must be a power of 2.
- * Creates Match records linked via nextMatchId to form the bracket tree.
- */
 export async function generateBracket(tournamentId: string, requesterId: string) {
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
@@ -17,53 +12,35 @@ export async function generateBracket(tournamentId: string, requesterId: string)
 
   const players = tournament.registrations.map((r) => r.user);
   const n = players.length;
-
   if (n < 2) throw new Error('Se necesitan al menos 2 jugadores');
-  if ((n & (n - 1)) !== 0) throw new Error('El número de jugadores debe ser potencia de 2');
+  if ((n & (n - 1)) !== 0) throw new Error('El numero de jugadores debe ser potencia de 2');
 
-  // Delete any existing matches
   await prisma.match.deleteMany({ where: { tournamentId } });
 
   const totalRounds = Math.log2(n);
-
-  // We'll build matches from the LAST round (final) backwards so we can set nextMatchId.
-  // Round numbering: 1 = first round, totalRounds = final.
-  // Positions per round: round r → n / 2^r matches.
-
-  // First pass: create all matches without nextMatchId, store ids by round/position.
-  const matchIdMap: Record<string, string> = {}; // key: `${round}-${position}`
+  const matchIdMap: Record<string, string> = {};
 
   for (let round = 1; round <= totalRounds; round++) {
-    const matchesInRound = n / Math.pow(2, round);
-    for (let pos = 1; pos <= matchesInRound; pos++) {
+    const count = n / Math.pow(2, round);
+    for (let pos = 1; pos <= count; pos++) {
       const match = await prisma.match.create({
-        data: {
-          tournamentId,
-          round,
-          position: pos,
-          status: 'PENDING',
-        },
+        data: { tournamentId, round, position: pos, status: 'PENDING' },
       });
       matchIdMap[`${round}-${pos}`] = match.id;
     }
   }
 
-  // Second pass: set nextMatchId for all matches except the final.
-  // Winner of match at (round, pos) advances to (round+1, ceil(pos/2)).
   for (let round = 1; round < totalRounds; round++) {
-    const matchesInRound = n / Math.pow(2, round);
-    for (let pos = 1; pos <= matchesInRound; pos++) {
+    const count = n / Math.pow(2, round);
+    for (let pos = 1; pos <= count; pos++) {
       const nextPos = Math.ceil(pos / 2);
-      const nextMatchId = matchIdMap[`${round + 1}-${nextPos}`];
       await prisma.match.update({
         where: { id: matchIdMap[`${round}-${pos}`] },
-        data: { nextMatchId },
+        data: { nextMatchId: matchIdMap[`${round + 1}-${nextPos}`] },
       });
     }
   }
 
-  // Third pass: assign players to round 1 matches.
-  // Shuffle for random seeding.
   const shuffled = [...players].sort(() => Math.random() - 0.5);
   for (let pos = 1; pos <= n / 2; pos++) {
     const p1 = shuffled[(pos - 1) * 2];
@@ -74,7 +51,6 @@ export async function generateBracket(tournamentId: string, requesterId: string)
     });
   }
 
-  // Update tournament status to IN_PROGRESS
   await prisma.tournament.update({ where: { id: tournamentId }, data: { status: 'IN_PROGRESS' } });
 
   return prisma.match.findMany({
@@ -100,54 +76,56 @@ export async function getMatches(tournamentId: string) {
   });
 }
 
-/**
- * Report match result. The reporter (player1 or player2) nominates a winner.
- * Status goes to PENDING_CONFIRMATION.
- */
-export async function reportResult(matchId: string, winnerId: string, reporterId: string) {
+export async function scheduleMatch(
+  tournamentId: string,
+  matchId: string,
+  scheduledDate: string,
+  requesterId: string
+) {
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament) throw new Error('Torneo no encontrado');
+  if (tournament.createdById !== requesterId) throw new Error('Sin permisos');
+
+  const date = new Date(scheduledDate);
+  if (isNaN(date.getTime())) throw new Error('Fecha invalida');
+  if (tournament.startDate && date < tournament.startDate)
+    throw new Error('La fecha es anterior al inicio del torneo');
+  if (tournament.endDate && date > tournament.endDate)
+    throw new Error('La fecha es posterior al fin del torneo');
+
+  return prisma.match.update({ where: { id: matchId }, data: { scheduledDate: date } });
+}
+
+export async function reportResult(
+  matchId: string,
+  winnerId: string,
+  reporterId: string,
+  score?: string
+) {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
   if (!match) throw new Error('Partido no encontrado');
   if (match.status !== 'PENDING')
     throw new Error('Solo se puede reportar el resultado de partidos PENDING');
-
   if (match.player1Id !== reporterId && match.player2Id !== reporterId)
     throw new Error('Solo los jugadores del partido pueden reportar el resultado');
-
   if (winnerId !== match.player1Id && winnerId !== match.player2Id)
     throw new Error('El ganador debe ser uno de los jugadores del partido');
 
   return prisma.match.update({
     where: { id: matchId },
-    data: { winnerId, reportedById: reporterId, status: 'PENDING_CONFIRMATION' },
+    data: {
+      winnerId,
+      reportedById: reporterId,
+      status: 'PENDING_CONFIRMATION',
+      ...(score ? { score } : {}),
+    },
   });
 }
 
-/**
- * Confirm result. The OTHER player (not the reporter) confirms.
- * Status → CONFIRMED. Winner advances to the next match.
- */
-export async function confirmResult(matchId: string, confirmerId: string) {
-  const match = await prisma.match.findUnique({ where: { id: matchId } });
-  if (!match) throw new Error('Partido no encontrado');
-  if (match.status !== 'PENDING_CONFIRMATION')
-    throw new Error('El partido no está en estado PENDING_CONFIRMATION');
-
-  if (match.reportedById === confirmerId)
-    throw new Error('El jugador que reportó no puede confirmar el resultado');
-
-  if (match.player1Id !== confirmerId && match.player2Id !== confirmerId)
-    throw new Error('Solo los jugadores del partido pueden confirmar el resultado');
-
-  const confirmed = await prisma.match.update({
-    where: { id: matchId },
-    data: { status: 'CONFIRMED' },
-  });
-
-  // Advance winner to next match
+async function advanceWinner(match: { id: string; tournamentId: string; nextMatchId: string | null; winnerId: string | null }) {
   if (match.nextMatchId && match.winnerId) {
     const nextMatch = await prisma.match.findUnique({ where: { id: match.nextMatchId } });
     if (nextMatch) {
-      // Place winner in the first available slot
       if (!nextMatch.player1Id) {
         await prisma.match.update({ where: { id: match.nextMatchId }, data: { player1Id: match.winnerId } });
       } else if (!nextMatch.player2Id) {
@@ -155,31 +133,87 @@ export async function confirmResult(matchId: string, confirmerId: string) {
       }
     }
   }
-
-  // Check if this was the final (no nextMatchId) → tournament FINISHED
   if (!match.nextMatchId) {
-    await prisma.tournament.update({
-      where: { id: match.tournamentId },
-      data: { status: 'FINISHED' },
-    });
+    await prisma.tournament.update({ where: { id: match.tournamentId }, data: { status: 'FINISHED' } });
   }
+}
 
+export async function confirmResult(matchId: string, confirmerId: string) {
+  const match = await prisma.match.findUnique({ where: { id: matchId } });
+  if (!match) throw new Error('Partido no encontrado');
+  if (match.status !== 'PENDING_CONFIRMATION' && match.status !== 'DISPUTED')
+    throw new Error('El partido no esta en estado confirmable');
+  if (match.reportedById === confirmerId)
+    throw new Error('El jugador que reporto no puede confirmar el resultado');
+  if (match.player1Id !== confirmerId && match.player2Id !== confirmerId)
+    throw new Error('Solo los jugadores del partido pueden confirmar');
+
+  const confirmed = await prisma.match.update({ where: { id: matchId }, data: { status: 'CONFIRMED' } });
+  await advanceWinner(match);
   return confirmed;
 }
 
 /**
- * Dispute result. Sets status → DISPUTED for organizer review.
+ * Dispute: the non-reporter submits their version.
+ * - PENDING_CONFIRMATION -> DISPUTED (counter-report, now original reporter must respond)
+ * - DISPUTED -> ORGANIZER_REVIEW (both disputed, organizer resolves)
  */
-export async function disputeResult(matchId: string, userId: string) {
+export async function disputeResult(
+  matchId: string,
+  userId: string,
+  winnerId: string,
+  score: string
+) {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
   if (!match) throw new Error('Partido no encontrado');
-  if (match.status !== 'PENDING_CONFIRMATION')
-    throw new Error('Solo se puede disputar un resultado PENDING_CONFIRMATION');
+
+  if (match.status !== 'PENDING_CONFIRMATION' && match.status !== 'DISPUTED')
+    throw new Error('No se puede disputar en este estado');
   if (match.player1Id !== userId && match.player2Id !== userId)
-    throw new Error('Solo los jugadores del partido pueden disputar el resultado');
+    throw new Error('Solo los jugadores del partido pueden disputar');
+  if (match.reportedById === userId)
+    throw new Error('No puedes disputar tu propio resultado; espera a que el otro jugador responda');
+
+  // Second dispute -> escalate to organizer
+  if (match.status === 'DISPUTED') {
+    return prisma.match.update({
+      where: { id: matchId },
+      data: { status: 'ORGANIZER_REVIEW', winnerId: null, score: null },
+    });
+  }
+
+  // First dispute: counter-report (winnerId and score required)
+  if (!winnerId || !score)
+    throw new Error('debes indicar un ganador y el marcador al disputar');
+  if (winnerId !== match.player1Id && winnerId !== match.player2Id)
+    throw new Error('El ganador debe ser uno de los jugadores del partido');
 
   return prisma.match.update({
     where: { id: matchId },
-    data: { status: 'DISPUTED', winnerId: null },
+    data: { winnerId, score, reportedById: userId, status: 'DISPUTED' },
   });
+}
+
+export async function organizerResolve(
+  matchId: string,
+  winnerId: string,
+  organizerId: string
+) {
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    include: { tournament: true },
+  });
+  if (!match) throw new Error('Partido no encontrado');
+  if (match.status !== 'ORGANIZER_REVIEW')
+    throw new Error('Solo se puede resolver en estado ORGANIZER_REVIEW');
+  if (match.tournament.createdById !== organizerId) throw new Error('Sin permisos');
+  if (winnerId !== match.player1Id && winnerId !== match.player2Id)
+    throw new Error('Ganador invalido');
+
+  const resolved = await prisma.match.update({
+    where: { id: matchId },
+    data: { winnerId, status: 'CONFIRMED' },
+  });
+  await advanceWinner({ ...match, winnerId });
+  return resolved;
 }

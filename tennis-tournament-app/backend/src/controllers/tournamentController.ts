@@ -4,16 +4,12 @@ import * as tournamentService from '../services/tournamentService';
 
 export async function createTournament(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const { name, maxPlayers, leagueId, status } = req.body;
+    const { name, maxPlayers, location, startDate, endDate, leagueId, status } = req.body;
     if (!name || !maxPlayers) {
-      res.status(400).json({ error: 'name y maxPlayers son requeridos' });
-      return;
+      res.status(400).json({ error: 'name y maxPlayers son requeridos' }); return;
     }
     const tournament = await tournamentService.createTournament({
-      name,
-      maxPlayers: Number(maxPlayers),
-      leagueId,
-      status,
+      name, maxPlayers: Number(maxPlayers), location, startDate, endDate, leagueId, status,
       createdById: req.userId!,
     });
     res.status(201).json(tournament);
@@ -61,6 +57,15 @@ export async function updateStatus(req: AuthRequest, res: Response): Promise<voi
     if (!status) { res.status(400).json({ error: 'status es requerido' }); return; }
     const tournament = await tournamentService.updateTournamentStatus(req.params.id, status, req.userId!);
     res.json(tournament);
+  } catch (err: unknown) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Error interno' });
+  }
+}
+
+export async function deleteTournament(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    await tournamentService.deleteTournament(req.params.id, req.userId!);
+    res.status(204).send();
   } catch (err: unknown) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Error interno' });
   }

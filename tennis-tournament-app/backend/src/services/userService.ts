@@ -39,3 +39,55 @@ export async function getProfile(userId: string) {
   if (!user) throw new Error('Usuario no encontrado');
   return user;
 }
+
+function parseSets(score: string | null, isPlayer1: boolean): { won: number; lost: number } {
+  if (!score) return { won: 0, lost: 0 };
+  let won = 0, lost = 0;
+  for (const set of score.split(' ')) {
+    const parts = set.split('-').map(Number);
+    if (parts.length !== 2) continue;
+    const [p1, p2] = parts;
+    if (isPlayer1) { if (p1 > p2) won++; else lost++; }
+    else { if (p2 > p1) won++; else lost++; }
+  }
+  return { won, lost };
+}
+
+export async function getUserStats(userId: string) {
+  const [registrations, matches, tournamentsWon] = await Promise.all([
+    prisma.registration.count({ where: { userId } }),
+    prisma.match.findMany({
+      where: {
+        status: 'CONFIRMED',
+        OR: [{ player1Id: userId }, { player2Id: userId }],
+      },
+      select: { player1Id: true, winnerId: true, score: true, nextMatchId: true },
+    }),
+    prisma.match.count({
+      where: {
+        status: 'CONFIRMED',
+        winnerId: userId,
+        nextMatchId: null,
+        tournament: { status: 'FINISHED' },
+      },
+    }),
+  ]);
+
+  let setsWon = 0, setsLost = 0;
+  const matchesWon = matches.filter((m) => m.winnerId === userId).length;
+  for (const m of matches) {
+    const s = parseSets(m.score, m.player1Id === userId);
+    setsWon += s.won;
+    setsLost += s.lost;
+  }
+
+  return {
+    tournamentsPlayed: registrations,
+    tournamentsWon,
+    matchesPlayed: matches.length,
+    matchesWon,
+    matchesLost: matches.length - matchesWon,
+    setsWon,
+    setsLost,
+  };
+}

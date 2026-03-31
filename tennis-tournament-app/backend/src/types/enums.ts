@@ -24,6 +24,7 @@ export type MatchStatus =
   | 'PENDING'
   | 'PENDING_CONFIRMATION'
   | 'CONFIRMED'
-  | 'DISPUTED';
+  | 'DISPUTED'
+  | 'ORGANIZER_REVIEW';
 
 export type LeagueMemberRole = 'ADMIN' | 'MEMBER';

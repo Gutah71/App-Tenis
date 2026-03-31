@@ -41,3 +41,8 @@ export async function getProfile(req: AuthRequest, res: Response): Promise<void>
     res.status(404).json({ error: message });
   }
 }
+
+export async function getStats(req: AuthRequest, res: Response): Promise<void> {
+  const stats = await userService.getUserStats(req.userId!);
+  res.json(stats);
+}

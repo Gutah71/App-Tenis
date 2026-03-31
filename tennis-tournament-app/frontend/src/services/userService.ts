@@ -1,5 +1,5 @@
 import request from './api';
-import type { AuthResponse, User } from '../types';
+import type { AuthResponse, User, UserStats } from '../types';
 
 export async function register(name: string, email: string, password: string, role: string): Promise<AuthResponse> {
   return request<AuthResponse>('/users/register', {
@@ -17,4 +17,8 @@ export async function login(email: string, password: string): Promise<AuthRespon
 
 export async function getProfile(): Promise<User> {
   return request<User>('/users/me');
+}
+
+export async function getUserStats(): Promise<UserStats> {
+  return request<UserStats>('/users/me/stats');
 }

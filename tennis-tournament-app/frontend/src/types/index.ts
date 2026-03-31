@@ -12,7 +12,8 @@ export type MatchStatus =
   | 'PENDING'
   | 'PENDING_CONFIRMATION'
   | 'CONFIRMED'
-  | 'DISPUTED';
+  | 'DISPUTED'
+  | 'ORGANIZER_REVIEW';
 
 export interface User {
   id: string;
@@ -20,6 +21,36 @@ export interface User {
   email: string;
   role: Role;
   createdAt?: string;
+}
+
+export interface Announcement {
+  id: string;
+  leagueId: string;
+  content: string;
+  createdAt: string;
+  createdBy: { id: string; name: string };
+}
+
+export interface PlayerStats {
+  userId: string;
+  name: string;
+  tournamentsPlayed: number;
+  tournamentsWon: number;
+  matchesPlayed: number;
+  matchesWon: number;
+  matchesLost: number;
+  setsWon: number;
+  setsLost: number;
+}
+
+export interface UserStats {
+  tournamentsPlayed: number;
+  tournamentsWon: number;
+  matchesPlayed: number;
+  matchesWon: number;
+  matchesLost: number;
+  setsWon: number;
+  setsLost: number;
 }
 
 export interface League {
@@ -30,7 +61,12 @@ export interface League {
   createdAt?: string;
   _count?: { members: number; tournaments: number };
   members?: { userId: string; role: string; user: { id: string; name: string; email: string } }[];
-  tournaments?: { id: string; name: string; status: TournamentStatus; maxPlayers: number }[];
+  tournaments?: {
+    id: string; name: string; status: TournamentStatus; maxPlayers: number;
+    location?: string | null; startDate?: string | null; endDate?: string | null;
+    _count?: { registrations: number };
+  }[];
+  announcements?: Announcement[];
 }
 
 export interface Tournament {
@@ -39,6 +75,9 @@ export interface Tournament {
   maxPlayers: number;
   status: TournamentStatus;
   leagueId?: string | null;
+  location?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   createdById: string;
   createdAt?: string;
   createdBy?: { id: string; name: string };
@@ -54,6 +93,8 @@ export interface Match {
   round: number;
   position: number;
   status: MatchStatus;
+  score?: string | null;
+  scheduledDate?: string | null;
   player1Id?: string | null;
   player2Id?: string | null;
   winnerId?: string | null;
