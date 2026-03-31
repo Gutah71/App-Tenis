@@ -89,7 +89,10 @@ export default function LeagueDetailPage() {
   if (loading) return <p className="text-center py-16 text-gray-400">Cargando liga...</p>;
   if (error || !league) return <p className="text-center py-16 text-red-500">{error || 'Liga no encontrada'}</p>;
 
-  const isOrganizer = isAuthenticated && user?.id === league.createdById;
+  const isOrganizer = isAuthenticated && (
+    user?.id === league.createdById ||
+    league.members?.some(m => m.userId === user?.id && m.role === 'ADMIN')
+  );
   const isMember = league.members?.some(m => m.userId === user?.id);
 
   const tournaments = league.tournaments ?? [];

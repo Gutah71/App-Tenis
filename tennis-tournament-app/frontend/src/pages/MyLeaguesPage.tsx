@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { listLeagues, updateLeague } from '../services/leagueService';
 import type { League } from '../types';
@@ -92,11 +93,19 @@ export default function MyLeaguesPage() {
               ) : (
                 <>
                   <div className="flex-1">
-                    <h2 className="font-semibold text-gray-800">{l.name}</h2>
+                    <Link to={`/leagues/${l.id}`} className="font-semibold text-gray-800 hover:text-green-700">
+                      {l.name}
+                    </Link>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {l._count?.members ?? 0} miembros · {l._count?.tournaments ?? 0} torneos
                     </p>
                   </div>
+                  <Link
+                    to={`/leagues/${l.id}`}
+                    className="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700"
+                  >
+                    Gestionar
+                  </Link>
                   <button
                     onClick={() => startEdit(l)}
                     className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-200"
