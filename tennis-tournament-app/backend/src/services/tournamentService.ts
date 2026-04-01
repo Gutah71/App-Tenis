@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma';
 import { TournamentStatus } from '../types/enums';
+import { sendNewTournamentInLeagueEmail } from './emailService';
 
 export async function createTournament(data: {
   name: string;
@@ -30,6 +31,30 @@ export async function createTournament(data: {
       status: data.status ?? 'OPEN',
       createdById: data.createdById,
     },
+  }).then(async (tournament) => {
+    // Notify league members if the tournament belongs to a league (non-blocking)
+    if (data.leagueId) {
+      const members = await prisma.leagueMember.findMany({
+        where: { leagueId: data.leagueId },
+        include: { user: { select: { email: true, name: true } } },
+      });
+      const league = await prisma.league.findUnique({ where: { id: data.leagueId }, select: { name: true } });
+      if (league) {
+        for (const m of members) {
+          sendNewTournamentInLeagueEmail(
+            m.user.email,
+            m.user.name,
+            league.name,
+            tournament.name,
+            tournament.id,
+            tournament.maxPlayers,
+            tournament.location,
+            tournament.startDate
+          ).catch(() => undefined);
+        }
+      }
+    }
+    return tournament;
   });
 }
 

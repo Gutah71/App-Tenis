@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { sendLeagueAnnouncementEmail } from './emailService';
 
 export async function createLeague(name: string, userId: string) {
   return prisma.league.create({
@@ -69,10 +70,28 @@ export async function addAnnouncement(leagueId: string, content: string, userId:
   const league = await prisma.league.findUnique({ where: { id: leagueId } });
   if (!league) throw new Error('Liga no encontrada');
   if (league.createdById !== userId) throw new Error('Solo el creador puede publicar anuncios');
-  return prisma.announcement.create({
+
+  const announcement = await prisma.announcement.create({
     data: { leagueId, content, createdById: userId },
     include: { createdBy: { select: { id: true, name: true } } },
   });
+
+  // Notify all league members (non-blocking)
+  const members = await prisma.leagueMember.findMany({
+    where: { leagueId },
+    include: { user: { select: { email: true, name: true } } },
+  });
+  for (const m of members) {
+    sendLeagueAnnouncementEmail(
+      m.user.email,
+      m.user.name,
+      league.name,
+      content,
+      announcement.createdBy.name
+    ).catch(() => undefined);
+  }
+
+  return announcement;
 }
 
 export async function deleteAnnouncement(announcementId: string, userId: string) {

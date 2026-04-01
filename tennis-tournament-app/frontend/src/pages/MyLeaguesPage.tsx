@@ -49,43 +49,49 @@ export default function MyLeaguesPage() {
   if (loading) return <p className="text-center py-16 text-gray-400">Cargando...</p>;
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Mis ligas</h1>
-      {error && <p className="mb-4 text-red-500 text-sm">{error}</p>}
+    <div className="w-full max-w-7xl mx-auto px-6 py-12">
+      <div className="mb-10">
+        <h1 className="section-title">Mis ligas</h1>
+        <p className="section-subtitle">Organiza y gestiona tus ligas de tenis</p>
+      </div>
+      {error && <div className="card mb-6 text-red-500 text-sm">{error}</div>}
 
       {leagues.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-          <p className="mb-4">No has creado ninguna liga todavía.</p>
-          <a
-            href="/leagues/new"
-            className="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        <div className="card text-center">
+          <svg className="w-12 h-12 mx-auto mb-4 text-gray-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4" />
+          </svg>
+          <p className="text-gray-400 mb-6">No has creado ninguna liga todavía</p>
+          <Link
+            to="/leagues"
+            className="btn-primary inline-flex items-center gap-2"
           >
             Crear primera liga
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="space-y-3">
           {leagues.map((l) => (
-            <div key={l.id} className="bg-white rounded-lg shadow p-5 flex items-center gap-4">
+            <div key={l.id} className="card flex items-center justify-between gap-4">
               {editId === l.id ? (
                 <>
                   <input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 input-field"
                     onKeyDown={(e) => e.key === 'Enter' && saveEdit(l.id)}
                     autoFocus
                   />
                   <button
                     onClick={() => saveEdit(l.id)}
                     disabled={saving}
-                    className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                    className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {saving ? '...' : 'Guardar'}
+                    {saving ? 'Guardando...' : 'Guardar'}
                   </button>
                   <button
                     onClick={() => setEditId(null)}
-                    className="text-gray-400 hover:text-gray-600 text-sm px-2"
+                    className="text-gray-500 hover:text-gray-400 text-sm px-2 font-medium transition-colors"
                   >
                     Cancelar
                   </button>
@@ -93,25 +99,27 @@ export default function MyLeaguesPage() {
               ) : (
                 <>
                   <div className="flex-1">
-                    <Link to={`/leagues/${l.id}`} className="font-semibold text-gray-800 hover:text-green-700">
+                    <Link to={`/leagues/${l.id}`} className="font-semibold text-white hover:text-brand-green transition-colors">
                       {l.name}
                     </Link>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-500 mt-1">
                       {l._count?.members ?? 0} miembros · {l._count?.tournaments ?? 0} torneos
                     </p>
                   </div>
-                  <Link
-                    to={`/leagues/${l.id}`}
-                    className="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700"
-                  >
-                    Gestionar
-                  </Link>
-                  <button
-                    onClick={() => startEdit(l)}
-                    className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-200"
-                  >
-                    ✏️ Editar nombre
-                  </button>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/leagues/${l.id}`}
+                      className="text-xs btn-primary"
+                    >
+                      Gestionar
+                    </Link>
+                    <button
+                      onClick={() => startEdit(l)}
+                      className="text-xs bg-brand-surface-2 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors"
+                    >
+                      Editar
+                    </button>
+                  </div>
                 </>
               )}
             </div>

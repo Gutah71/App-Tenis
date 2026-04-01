@@ -103,50 +103,50 @@ function ScoreForm({ match, submitLabel, onSubmit, onCancel }: {
     : null;
 
   return (
-    <div className="mt-3 bg-white border border-green-200 rounded-lg p-4 space-y-3">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Resultado del partido</p>
-      <div className="grid grid-cols-[3rem_1fr_1rem_1fr] gap-x-2 items-center text-xs text-gray-400 font-medium">
+    <div className="mt-3 card space-y-3">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Resultado del partido</p>
+      <div className="grid grid-cols-[3rem_1fr_1rem_1fr] gap-x-2 items-center text-xs text-gray-500 font-medium">
         <span />
-        <span className="text-center truncate">{match.player1?.name ?? 'J1'}</span>
+        <span className="text-center truncate text-white">{match.player1?.name ?? 'J1'}</span>
         <span />
-        <span className="text-center truncate">{match.player2?.name ?? 'J2'}</span>
+        <span className="text-center truncate text-white">{match.player2?.name ?? 'J2'}</span>
       </div>
       {([0, 1] as const).map((idx) => (
         <div key={idx} className="grid grid-cols-[3rem_1fr_1rem_1fr] gap-x-2 items-center">
-          <span className="text-xs text-gray-400">Set {idx + 1}</span>
+          <span className="text-xs text-gray-500">Set {idx + 1}</span>
           <input type="number" min={0} max={7} value={sets[idx].p1}
             onChange={(e) => updateSet(idx, 'p1', e.target.value)}
-            className="w-full border rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="0" />
-          <span className="text-gray-400 text-center">-</span>
+            className="w-full input-field" placeholder="0" />
+          <span className="text-gray-500 text-center">-</span>
           <input type="number" min={0} max={7} value={sets[idx].p2}
             onChange={(e) => updateSet(idx, 'p2', e.target.value)}
-            className="w-full border rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="0" />
+            className="w-full input-field" placeholder="0" />
         </div>
       ))}
       {showSet3 && (
         <div className="grid grid-cols-[3rem_1fr_1rem_1fr] gap-x-2 items-center">
-          <span className="text-xs text-gray-400">Set 3</span>
+          <span className="text-xs text-gray-500">Set 3</span>
           <input type="number" min={0} max={7} value={sets[2].p1}
             onChange={(e) => updateSet(2, 'p1', e.target.value)}
-            className="w-full border rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="0" />
-          <span className="text-gray-400 text-center">-</span>
+            className="w-full input-field" placeholder="0" />
+          <span className="text-gray-500 text-center">-</span>
           <input type="number" min={0} max={7} value={sets[2].p2}
             onChange={(e) => updateSet(2, 'p2', e.target.value)}
-            className="w-full border rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="0" />
+            className="w-full input-field" placeholder="0" />
         </div>
       )}
       {winnerName
-        ? <p className="text-sm font-semibold text-green-700 bg-green-50 rounded px-3 py-1.5">Ganador: {winnerName} ({result.p1Sets}-{result.p2Sets})</p>
+        ? <p className="text-sm font-semibold text-brand-green bg-brand-green/10 rounded px-3 py-1.5 border border-brand-green/30">Ganador: {winnerName} ({result.p1Sets}-{result.p2Sets})</p>
         : sets.some(s => s.p1 !== '' || s.p2 !== '') && result.error
-        ? <p className="text-xs text-orange-500">{result.error}</p>
+        ? <p className="text-xs text-red-400">{result.error}</p>
         : null
       }
       <div className="flex gap-2 pt-1">
         <button onClick={handleSubmit} disabled={!result.winnerId || submitting}
-          className="bg-green-600 text-white text-sm px-4 py-1.5 rounded hover:bg-green-700 disabled:opacity-40">
+          className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed">
           {submitting ? 'Enviando...' : (submitLabel ?? 'Enviar resultado')}
         </button>
-        <button onClick={onCancel} className="text-sm text-gray-400 hover:text-gray-600 px-2">Cancelar</button>
+        <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-400 px-2 transition-colors">Cancelar</button>
       </div>
     </div>
   );
@@ -208,9 +208,9 @@ export default function TournamentDetailPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto px-6 py-12 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="card">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold text-gray-800">{tournament.name}</h1>
           <span className="shrink-0 text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
@@ -261,11 +261,11 @@ export default function TournamentDetailPage() {
 
       {/* Players */}
       {registrations.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-5">
-          <h2 className="font-semibold text-gray-700 mb-3">Jugadores inscritos ({registrations.length})</h2>
-          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+        <div className="card">
+          <h2 className="font-semibold text-white mb-3">Jugadores inscritos ({registrations.length})</h2>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {registrations.map(r => (
-              <li key={r.userId} className="text-sm text-gray-600 py-1 px-2 bg-gray-50 rounded">{r.user.name}</li>
+              <li key={r.userId} className="text-sm text-gray-300 py-2 px-3 bg-brand-surface-2 rounded-lg border border-brand-border">{r.user.name}</li>
             ))}
           </ul>
         </div>
@@ -273,19 +273,19 @@ export default function TournamentDetailPage() {
 
       {/* Bracket view */}
       {matches.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-5">
-          <h2 className="font-semibold text-gray-700 mb-4">Cuadro eliminatorio</h2>
+        <div className="card">
+          <h2 className="font-semibold text-white mb-4">Cuadro eliminatorio</h2>
           <BracketView matches={matches} maxPlayers={tournament.maxPlayers} />
         </div>
       )}
 
       {/* Matches */}
       {matches.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-5">
-          <h2 className="font-semibold text-gray-700 mb-4">Partidos</h2>
+        <div className="card">
+          <h2 className="font-semibold text-white mb-4">Partidos</h2>
           {Object.entries(matchesByRound).sort(([a], [b]) => Number(a) - Number(b)).map(([round, rMatches]) => (
             <div key={round} className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold text-brand-green uppercase tracking-wide mb-3">
                 {Number(round) === Math.log2(tournament.maxPlayers) ? 'Final'
                   : Number(round) === Math.log2(tournament.maxPlayers) - 1 && tournament.maxPlayers > 4 ? 'Semifinal'
                   : `Ronda ${round}`}
@@ -305,59 +305,59 @@ export default function TournamentDetailPage() {
                   const canOrgResolve = isOrganizer && m.status === 'ORGANIZER_REVIEW' && m.player1Id && m.player2Id;
 
                   return (
-                    <div key={m.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div key={m.id} className="border border-brand-border rounded-lg p-4 bg-brand-surface-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="text-sm flex items-center gap-1.5">
-                          <span className={m.winnerId === m.player1Id && m.status === 'CONFIRMED' ? 'font-bold text-green-700' : 'text-gray-700'}>
+                          <span className={m.winnerId === m.player1Id && m.status === 'CONFIRMED' ? 'font-bold text-brand-green' : 'text-white'}>
                             {m.player1?.name ?? 'TBD'}
                           </span>
-                          <span className="text-gray-300">vs</span>
-                          <span className={m.winnerId === m.player2Id && m.status === 'CONFIRMED' ? 'font-bold text-green-700' : 'text-gray-700'}>
+                          <span className="text-gray-600">vs</span>
+                          <span className={m.winnerId === m.player2Id && m.status === 'CONFIRMED' ? 'font-bold text-brand-green' : 'text-white'}>
                             {m.player2?.name ?? 'TBD'}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-400 shrink-0">{M_STATUS[m.status] ?? m.status}</span>
+                        <span className="text-xs text-gray-500 shrink-0">{M_STATUS[m.status] ?? m.status}</span>
                       </div>
 
                       {m.scheduledDate && (
-                        <p className="text-xs text-blue-500 mt-1">Fecha programada: {fmtDate(m.scheduledDate)}</p>
+                        <p className="text-xs text-blue-400 mt-2">Fecha programada: {fmtDate(m.scheduledDate)}</p>
                       )}
-                      {m.score && <p className="text-xs text-gray-500 mt-1">Marcador: {m.score}</p>}
+                      {m.score && <p className="text-xs text-gray-400 mt-2">Marcador: {m.score}</p>}
                       {m.status === 'CONFIRMED' && m.winner && (
-                        <p className="text-xs text-green-600 mt-1 font-medium">Ganador: {m.winner.name}</p>
+                        <p className="text-xs text-brand-green mt-2 font-medium">Ganador: {m.winner.name}</p>
                       )}
                       {m.status === 'DISPUTED' && (
-                        <p className="text-xs text-orange-500 mt-1">
+                        <p className="text-xs text-orange-400 mt-2">
                           Resultado disputado — {m.reportedById === user?.id
                             ? 'Espera la respuesta del otro jugador'
                             : 'Confirma o disputa el resultado'}
                         </p>
                       )}
                       {m.status === 'ORGANIZER_REVIEW' && (
-                        <p className="text-xs text-red-500 mt-1">Ambos jugadores han disputado — el organizador debe resolver</p>
+                        <p className="text-xs text-red-400 mt-2">Ambos jugadores han disputado — el organizador debe resolver</p>
                       )}
 
                       {/* Schedule match date (organizer only, if tournament has dates) */}
                       {isOrganizer && m.player1Id && m.player2Id && m.status !== 'CONFIRMED' && (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           {scheduleMatchId === m.id ? (
                             <div className="flex items-center gap-2">
                               <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)}
                                 min={tournament.startDate ? tournament.startDate.split('T')[0] : undefined}
                                 max={tournament.endDate ? tournament.endDate.split('T')[0] : undefined}
-                                className="text-xs border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                className="text-xs input-field" />
                               <button onClick={() => run(async () => {
                                 await scheduleMatch(id!, m.id, scheduleDate);
                                 setScheduleMatchId(null);
                               })} disabled={!scheduleDate}
-                                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-40">
+                                className="text-xs bg-blue-500/20 border border-blue-500/50 text-blue-400 px-3 py-1 rounded hover:bg-blue-500/30 disabled:opacity-40 font-medium transition-colors">
                                 Guardar
                               </button>
-                              <button onClick={() => setScheduleMatchId(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
+                              <button onClick={() => setScheduleMatchId(null)} className="text-xs text-gray-500 hover:text-gray-400 font-medium transition-colors">Cancelar</button>
                             </div>
                           ) : (
                             <button onClick={() => { setScheduleMatchId(m.id); setScheduleDate(m.scheduledDate ? m.scheduledDate.split('T')[0] : ''); }}
-                              className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200">
+                              className="text-xs bg-brand-surface-3 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1 rounded font-medium transition-colors">
                               {m.scheduledDate ? 'Cambiar fecha' : 'Programar fecha'}
                             </button>
                           )}
@@ -367,7 +367,7 @@ export default function TournamentDetailPage() {
                       {/* Report result */}
                       {canReport && reportMatchId !== m.id && (
                         <button onClick={() => setReportMatchId(m.id)}
-                          className="mt-2 text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200">
+                          className="mt-3 text-xs bg-blue-500/20 border border-blue-500/50 text-blue-400 hover:bg-blue-500/30 px-3 py-1.5 rounded font-medium transition-colors">
                           Reportar resultado
                         </button>
                       )}
@@ -382,13 +382,13 @@ export default function TournamentDetailPage() {
 
                       {/* Confirm or dispute (first round) */}
                       {canActOnPendingConf && disputeMatchId !== m.id && (
-                        <div className="mt-2 flex gap-2">
+                        <div className="mt-3 flex gap-2">
                           <button onClick={() => run(() => confirmResult(id!, m.id))}
-                            className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded hover:bg-green-200">
+                            className="text-xs bg-brand-green/20 border border-brand-green/50 text-brand-green hover:bg-brand-green/30 px-3 py-1.5 rounded font-medium transition-colors">
                             Confirmar resultado
                           </button>
                           <button onClick={() => setDisputeMatchId(m.id)}
-                            className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded hover:bg-red-200">
+                            className="text-xs bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded font-medium transition-colors">
                             Disputar (enviar mi versión)
                           </button>
                         </div>
@@ -404,13 +404,13 @@ export default function TournamentDetailPage() {
 
                       {/* Confirm or escalate (second round) */}
                       {canActOnDisputed && (
-                        <div className="mt-2 flex gap-2">
+                        <div className="mt-3 flex gap-2">
                           <button onClick={() => run(() => confirmResult(id!, m.id))}
-                            className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded hover:bg-green-200">
+                            className="text-xs bg-brand-green/20 border border-brand-green/50 text-brand-green hover:bg-brand-green/30 px-3 py-1.5 rounded font-medium transition-colors">
                             Aceptar versión del otro jugador
                           </button>
                           <button onClick={() => run(() => disputeResult(id!, m.id, '', ''))}
-                            className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded hover:bg-red-200">
+                            className="text-xs bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded font-medium transition-colors">
                             Escalar al organizador
                           </button>
                         </div>
@@ -418,15 +418,15 @@ export default function TournamentDetailPage() {
 
                       {/* Organizer resolve */}
                       {canOrgResolve && (
-                        <div className="mt-2">
-                          <p className="text-xs text-gray-500 mb-1">Selecciona el ganador:</p>
+                        <div className="mt-3">
+                          <p className="text-xs text-gray-500 mb-2">Selecciona el ganador:</p>
                           <div className="flex gap-2">
                             <button onClick={() => run(() => organizerResolve(id!, m.id, m.player1Id!))}
-                              className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded hover:bg-purple-200">
+                              className="text-xs bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 px-3 py-1.5 rounded font-medium transition-colors">
                               {m.player1?.name ?? 'Jugador 1'}
                             </button>
                             <button onClick={() => run(() => organizerResolve(id!, m.id, m.player2Id!))}
-                              className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded hover:bg-purple-200">
+                              className="text-xs bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 px-3 py-1.5 rounded font-medium transition-colors">
                               {m.player2?.name ?? 'Jugador 2'}
                             </button>
                           </div>

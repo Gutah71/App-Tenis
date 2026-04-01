@@ -1,4 +1,9 @@
 import prisma from '../lib/prisma';
+import {
+  sendMatchAssignedEmail,
+  sendMatchScheduledEmail,
+  sendConfirmResultEmail,
+} from './emailService';
 
 export async function generateBracket(tournamentId: string, requesterId: string) {
   const tournament = await prisma.tournament.findUnique({
@@ -49,6 +54,12 @@ export async function generateBracket(tournamentId: string, requesterId: string)
       where: { id: matchIdMap[`1-${pos}`] },
       data: { player1Id: p1.id, player2Id: p2.id },
     });
+
+    // Notify both players (non-blocking)
+    const p1Full = await prisma.user.findUnique({ where: { id: p1.id }, select: { email: true, name: true } });
+    const p2Full = await prisma.user.findUnique({ where: { id: p2.id }, select: { email: true, name: true } });
+    if (p1Full) sendMatchAssignedEmail(p1Full.email, p1Full.name, p2.name, tournament.name, 1).catch(() => undefined);
+    if (p2Full) sendMatchAssignedEmail(p2Full.email, p2Full.name, p1.name, tournament.name, 1).catch(() => undefined);
   }
 
   await prisma.tournament.update({ where: { id: tournamentId }, data: { status: 'IN_PROGRESS' } });
@@ -93,7 +104,38 @@ export async function scheduleMatch(
   if (tournament.endDate && date > tournament.endDate)
     throw new Error('La fecha es posterior al fin del torneo');
 
-  return prisma.match.update({ where: { id: matchId }, data: { scheduledDate: date } });
+  const updated = await prisma.match.update({
+    where: { id: matchId },
+    data: { scheduledDate: date },
+    include: {
+      player1: { select: { id: true, name: true, email: true } },
+      player2: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  // Notify both players (non-blocking)
+  if (updated.player1) {
+    const p2Name = updated.player2?.name ?? 'tu rival';
+    sendMatchScheduledEmail(
+      (updated.player1 as { email: string; name: string }).email,
+      updated.player1.name,
+      p2Name,
+      tournament.name,
+      date
+    ).catch(() => undefined);
+  }
+  if (updated.player2) {
+    const p1Name = updated.player1?.name ?? 'tu rival';
+    sendMatchScheduledEmail(
+      (updated.player2 as { email: string; name: string }).email,
+      updated.player2.name,
+      p1Name,
+      tournament.name,
+      date
+    ).catch(() => undefined);
+  }
+
+  return updated;
 }
 
 export async function reportResult(
@@ -111,7 +153,7 @@ export async function reportResult(
   if (winnerId !== match.player1Id && winnerId !== match.player2Id)
     throw new Error('El ganador debe ser uno de los jugadores del partido');
 
-  return prisma.match.update({
+  const updated = await prisma.match.update({
     where: { id: matchId },
     data: {
       winnerId,
@@ -120,6 +162,36 @@ export async function reportResult(
       ...(score ? { score } : {}),
     },
   });
+
+  // Notify opponent to confirm (non-blocking, run after DB write)
+  setImmediate(() => notifyConfirmResult(matchId, reporterId, score).catch(() => undefined));
+
+  return updated;
+}
+
+async function notifyConfirmResult(matchId: string, reporterId: string, score?: string | null) {
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    include: {
+      player1: { select: { id: true, name: true, email: true } },
+      player2: { select: { id: true, name: true, email: true } },
+      winner: { select: { id: true, name: true } },
+      tournament: { select: { name: true } },
+    },
+  });
+  if (!match || !match.player1 || !match.player2 || !match.winner) return;
+
+  const opponent = match.player1.id === reporterId ? match.player2 : match.player1;
+  const reporter = match.player1.id === reporterId ? match.player1 : match.player2;
+
+  sendConfirmResultEmail(
+    (opponent as { email: string; name: string }).email,
+    opponent.name,
+    reporter.name,
+    match.tournament.name,
+    match.winner.name,
+    score ?? null
+  ).catch(() => undefined);
 }
 
 async function advanceWinner(match: { id: string; tournamentId: string; nextMatchId: string | null; winnerId: string | null }) {

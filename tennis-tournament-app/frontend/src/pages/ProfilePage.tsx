@@ -24,58 +24,71 @@ export default function ProfilePage() {
   const ROLE_LABELS: Record<string, string> = { PLAYER: 'Jugador', ORGANIZER: 'Organizador' };
 
   return (
-    <div className="max-w-md mx-auto space-y-6 mt-8">
-      <div className="bg-white rounded-lg shadow p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Mi perfil</h1>
-        <dl className="space-y-3">
-          <div>
-            <dt className="text-sm text-gray-500">Nombre</dt>
-            <dd className="font-medium text-gray-800">{displayed.name}</dd>
+    <div className="w-full max-w-2xl mx-auto px-6 py-12 space-y-6">
+      <div className="card">
+        <h1 className="section-title">Mi perfil</h1>
+        <dl className="mt-6 space-y-5">
+          <div className="pb-4 border-b border-brand-border">
+            <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Nombre</dt>
+            <dd className="font-medium text-white mt-1">{displayed.name}</dd>
+          </div>
+          <div className="pb-4 border-b border-brand-border">
+            <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Email</dt>
+            <dd className="font-medium text-white mt-1">{displayed.email}</dd>
           </div>
           <div>
-            <dt className="text-sm text-gray-500">Email</dt>
-            <dd className="font-medium text-gray-800">{displayed.email}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-gray-500">Rol</dt>
-            <dd className="font-medium text-gray-800">{ROLE_LABELS[displayed.role] ?? displayed.role}</dd>
+            <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Rol</dt>
+            <dd className="font-medium text-white mt-1 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-brand-green"></span>
+              {ROLE_LABELS[displayed.role] ?? displayed.role}
+            </dd>
           </div>
         </dl>
       </div>
 
       {stats && displayed.role === 'PLAYER' && (
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Mis estadísticas</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Torneos jugados</span>
-              <span className="font-semibold text-gray-800">{stats.tournamentsPlayed}</span>
+        <div className="card">
+          <h2 className="font-bold text-white text-lg mb-6">Mis estadísticas</h2>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-brand-surface-2 rounded-lg p-4 border border-brand-border">
+                <p className="text-xs text-gray-500 font-medium uppercase">Torneos jugados</p>
+                <p className="text-2xl font-bold text-white mt-1">{stats.tournamentsPlayed}</p>
+              </div>
+              <div className="bg-brand-surface-2 rounded-lg p-4 border border-brand-border">
+                <p className="text-xs text-brand-green font-medium uppercase">Torneos ganados</p>
+                <p className="text-2xl font-bold text-brand-green mt-1">{stats.tournamentsWon}</p>
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Torneos ganados</span>
-              <span className="font-semibold text-green-700">{stats.tournamentsWon}</span>
+
+            <div className="bg-brand-surface-2/50 border border-brand-border rounded-lg p-4 space-y-3">
+              <p className="text-xs text-gray-500 font-medium uppercase mb-3">Partidos</p>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <p className="text-xs text-gray-500">Jugados</p>
+                  <p className="text-xl font-bold text-white">{stats.matchesPlayed}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-brand-green">Ganados</p>
+                  <p className="text-xl font-bold text-brand-green">{stats.matchesWon}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-red-400">Perdidos</p>
+                  <p className="text-xl font-bold text-red-400">{stats.matchesLost}</p>
+                </div>
+              </div>
             </div>
-            <hr />
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Partidos jugados</span>
-              <span className="font-semibold text-gray-800">{stats.matchesPlayed}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Partidos ganados</span>
-              <span className="font-semibold text-green-700">{stats.matchesWon}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Partidos perdidos</span>
-              <span className="font-semibold text-red-600">{stats.matchesLost}</span>
-            </div>
-            <hr />
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sets ganados</span>
-              <span className="font-semibold text-gray-800">{stats.setsWon}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sets perdidos</span>
-              <span className="font-semibold text-gray-800">{stats.setsLost}</span>
+
+            <div className="bg-brand-surface-2/50 rounded-lg p-4 border border-brand-border">
+              <p className="text-xs text-gray-500 font-medium uppercase mb-3">Sets</p>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Ganados</span>
+                <span className="text-lg font-bold text-brand-green">{stats.setsWon}</span>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-gray-400">Perdidos</span>
+                <span className="text-lg font-bold text-gray-300">{stats.setsLost}</span>
+              </div>
             </div>
           </div>
         </div>

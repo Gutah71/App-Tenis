@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import { sendWelcomeEmail } from './emailService';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'changeme-in-production';
 const SALT_ROUNDS = 10;
@@ -17,6 +18,10 @@ export async function register(name: string, email: string, password: string, ro
   });
 
   const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+
+  // Send welcome email (non-blocking)
+  sendWelcomeEmail(user.email, user.name).catch(() => undefined);
+
   return { token, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
 }
 
