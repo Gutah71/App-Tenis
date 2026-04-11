@@ -51,55 +51,59 @@ export default function CreateTournamentPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow mt-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Crear torneo{leagueId ? ' en liga' : ''}</h1>
-      {error && <p className="mb-4 text-red-500 text-sm">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del torneo</label>
-          <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
-          <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
-            placeholder="Club de tenis, ciudad..."
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+    <div className="w-full max-w-md mx-auto px-6 py-12">
+      <div className="mb-8">
+        <h1 className="section-title">Crear torneo{leagueId ? ' en liga' : ''}</h1>
+        <p className="section-subtitle">Configura los detalles del nuevo torneo</p>
+      </div>
+      <div className="card">
+        {error && <p className="mb-5 text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
+            <label className="label">Nombre del torneo</label>
+            <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
+              className="input-field" placeholder="Ej: Torneo de verano 2026" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha fin</label>
-            <input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
+            <label className="label">Ubicación</label>
+            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
+              placeholder="Club de tenis, ciudad..."
+              className="input-field" />
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Máximo de jugadores</label>
-          <select value={maxPlayers} onChange={(e) => setMaxPlayers(Number(e.target.value))}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-            {PLAYER_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n} jugadores</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Estado inicial</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'OPEN')}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-            <option value="OPEN">Abierto (inscripciones habilitadas)</option>
-            <option value="DRAFT">Borrador (sin inscripciones)</option>
-          </select>
-        </div>
-        <button type="submit" disabled={loading}
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50">
-          {loading ? 'Creando...' : 'Crear torneo'}
-        </button>
-      </form>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Fecha inicio</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                className="input-field" />
+            </div>
+            <div>
+              <label className="label">Fecha fin</label>
+              <input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)}
+                className="input-field" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Máximo de jugadores</label>
+            <select value={maxPlayers} onChange={(e) => setMaxPlayers(Number(e.target.value))}
+              className="input-field">
+              {PLAYER_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n} jugadores</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Estado inicial</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'OPEN')}
+              className="input-field">
+              <option value="OPEN">Abierto (inscripciones habilitadas)</option>
+              <option value="DRAFT">Borrador (sin inscripciones)</option>
+            </select>
+          </div>
+          <button type="submit" disabled={loading} className="btn-primary w-full">
+            {loading ? 'Creando...' : 'Crear torneo'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

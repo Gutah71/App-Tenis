@@ -45,6 +45,29 @@ export async function getProfile(userId: string) {
   return user;
 }
 
+export async function updateName(userId: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error('El nombre no puede estar vacío');
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { name: trimmed },
+    select: { id: true, name: true, email: true, role: true },
+  });
+  return user;
+}
+
+export async function getMyTournaments(userId: string) {
+  return prisma.tournament.findMany({
+    where: { registrations: { some: { userId } } },
+    include: {
+      createdBy: { select: { id: true, name: true } },
+      league: { select: { id: true, name: true } },
+      registrations: { select: { userId: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 function parseSets(score: string | null, isPlayer1: boolean): { won: number; lost: number } {
   if (!score) return { won: 0, lost: 0 };
   let won = 0, lost = 0;

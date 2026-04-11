@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listTournaments, deleteTournament } from '../services/tournamentService';
+import { getMyTournaments } from '../services/userService';
 import { useAuth } from '../context/AuthContext';
 import type { Tournament } from '../types';
 
@@ -18,11 +19,12 @@ export default function MyTournamentsPage() {
   async function load() {
     setLoading(true);
     try {
-      const all = await listTournaments();
-      const filtered = user?.role === 'ORGANIZER'
-        ? all.filter((t) => t.createdById === user.id)
-        : all.filter((t) => t.registrations?.some((r) => r.userId === user?.id));
-      setTournaments(filtered);
+      if (user?.role === 'ORGANIZER') {
+        const all = await listTournaments();
+        setTournaments(all.filter((t) => t.createdById === user.id));
+      } else {
+        setTournaments(await getMyTournaments());
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {

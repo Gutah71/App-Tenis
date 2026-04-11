@@ -112,9 +112,17 @@ export default function LeagueDetailPage() {
   ] as const;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto px-6 py-12 space-y-6">
+      {/* Back button */}
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-brand-green transition-colors">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver
+      </button>
+
       {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="card">
         <div className="flex items-start justify-between gap-3">
           {editingName ? (
             <div className="flex items-center gap-2 flex-1">
@@ -123,59 +131,61 @@ export default function LeagueDetailPage() {
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="input-field text-lg font-bold flex-1"
               />
-              <button onClick={handleSaveName} className="text-sm bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700">Guardar</button>
-              <button onClick={() => setEditingName(false)} className="text-sm text-gray-400 hover:text-gray-600">Cancelar</button>
+              <button onClick={handleSaveName} className="btn-primary text-sm">Guardar</button>
+              <button onClick={() => setEditingName(false)} className="btn-secondary text-sm">Cancelar</button>
             </div>
           ) : (
-            <h1 className="text-2xl font-bold text-gray-800">{league.name}</h1>
+            <h1 className="text-2xl font-bold text-white">{league.name}</h1>
           )}
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap justify-end">
             {isOrganizer && !editingName && (
               <>
                 <button
                   onClick={() => { setNewName(league.name); setEditingName(true); }}
-                  className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-200"
+                  className="text-xs bg-brand-surface-3 border border-brand-border text-gray-300 px-3 py-1.5 rounded hover:border-brand-green hover:text-brand-green transition-colors"
                 >
                   Editar nombre
                 </button>
                 <Link
                   to={`/tournaments/new?leagueId=${league.id}`}
-                  className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
+                  className="text-xs bg-brand-green/20 border border-brand-green/50 text-brand-green px-3 py-1.5 rounded hover:bg-brand-green/30 transition-colors font-medium"
                 >
                   + Torneo
                 </Link>
-                <button onClick={handleDelete} className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded hover:bg-red-200">
+                <button onClick={handleDelete} className="text-xs bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-1.5 rounded hover:bg-red-500/20 transition-colors">
                   Eliminar liga
                 </button>
               </>
             )}
             {isAuthenticated && !isMember && !isOrganizer && (
               <button onClick={() => run(() => joinLeague(league.id))}
-                className="text-sm bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700">
-                Unirse
+                className="btn-primary text-sm">
+                Unirse a la liga
               </button>
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
-          Creada por <strong>{league.createdBy?.name}</strong> · {league.members?.length ?? 0} miembros
+        <p className="text-sm text-gray-400 mt-3">
+          Creada por <strong className="text-gray-300">{league.createdBy?.name}</strong>
+          <span className="mx-2 text-brand-border">·</span>
+          <span className="text-gray-400">{league.members?.length ?? 0} miembros</span>
         </p>
-        {actionError && <p className="mt-2 text-red-500 text-sm">{actionError}</p>}
+        {actionError && <p className="mt-3 text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">{actionError}</p>}
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="flex border-b border-gray-200">
+      <div className="card p-0 overflow-hidden">
+        <div className="flex border-b border-brand-border overflow-x-auto">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                 tab === t.key
-                  ? 'border-green-500 text-green-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-brand-green text-brand-green'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
               }`}
             >
               {t.label}
@@ -191,17 +201,17 @@ export default function LeagueDetailPage() {
               : <div className="space-y-3">
                   {activeTournaments.map(t => (
                     <Link key={t.id} to={`/tournaments/${t.id}`}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      className="flex items-center justify-between p-3 border border-brand-border rounded-lg hover:border-brand-green/50 hover:bg-brand-surface-2 transition-colors">
                       <div>
-                        <p className="font-medium text-gray-800">{t.name}</p>
+                        <p className="font-medium text-white">{t.name}</p>
                         {(t.startDate || t.location) && (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-400 mt-0.5">
                             {t.location && `${t.location} · `}
                             {fmtDate(t.startDate)}{t.endDate && ` — ${fmtDate(t.endDate)}`}
                           </p>
                         )}
                       </div>
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-brand-green/10 text-brand-green border border-brand-green/30 px-2.5 py-1 rounded-full font-medium shrink-0 ml-3">
                         {T_STATUS[t.status]}
                       </span>
                     </Link>
@@ -216,13 +226,15 @@ export default function LeagueDetailPage() {
               : <div className="space-y-3">
                   {pastTournaments.map(t => (
                     <Link key={t.id} to={`/tournaments/${t.id}`}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      className="flex items-center justify-between p-3 border border-brand-border rounded-lg hover:border-brand-green/50 hover:bg-brand-surface-2 transition-colors">
                       <div>
-                        <p className="font-medium text-gray-800">{t.name}</p>
-                        {t.location && <p className="text-xs text-gray-400">{t.location}</p>}
+                        <p className="font-medium text-white">{t.name}</p>
+                        {t.location && <p className="text-xs text-gray-400 mt-0.5">{t.location}</p>}
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        t.status === 'FINISHED' ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-600'
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ml-3 border ${
+                        t.status === 'FINISHED'
+                          ? 'bg-gray-500/10 text-gray-400 border-gray-500/30'
+                          : 'bg-red-500/10 text-red-400 border-red-500/30'
                       }`}>
                         {T_STATUS[t.status]}
                       </span>
@@ -241,10 +253,10 @@ export default function LeagueDetailPage() {
                     value={annContent}
                     onChange={(e) => setAnnContent(e.target.value)}
                     placeholder="Escribe un anuncio..."
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="input-field flex-1"
                   />
                   <button type="submit" disabled={addingAnn || !annContent.trim()}
-                    className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50">
+                    className="btn-primary text-sm disabled:opacity-50 shrink-0">
                     {addingAnn ? '...' : 'Publicar'}
                   </button>
                 </form>
@@ -252,19 +264,19 @@ export default function LeagueDetailPage() {
               {announcements.length === 0
                 ? <p className="text-gray-500 text-sm">No hay anuncios.</p>
                 : announcements.map(a => (
-                  <div key={a.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div key={a.id} className="border border-brand-border rounded-lg p-4 bg-brand-surface-2">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm text-gray-800">{a.content}</p>
+                      <p className="text-sm text-gray-200">{a.content}</p>
                       {isOrganizer && (
                         <button
                           onClick={() => run(() => deleteAnnouncement(league.id, a.id))}
-                          className="text-xs text-red-400 hover:text-red-600 shrink-0"
+                          className="text-xs text-red-400 hover:text-red-300 shrink-0 transition-colors"
                         >
                           Eliminar
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-2">
                       {a.createdBy.name} · {new Date(a.createdAt).toLocaleDateString('es-ES')}
                     </p>
                   </div>
@@ -280,26 +292,26 @@ export default function LeagueDetailPage() {
               : <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs text-gray-400 uppercase border-b">
+                      <tr className="text-left text-xs text-gray-400 uppercase border-b border-brand-border">
                         <th className="py-2 pr-4">#</th>
                         <th className="py-2 pr-4">Jugador</th>
                         <th className="py-2 pr-4 text-center">Torneos J/G</th>
                         <th className="py-2 pr-4 text-center">Partidos J/G/P</th>
-                        <th className="py-2 text-center">Sets</th>
+                        <th className="py-2 text-center">Sets G</th>
                       </tr>
                     </thead>
                     <tbody>
                       {stats.map((s, i) => (
-                        <tr key={s.userId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="py-2 pr-4 font-medium text-gray-500">{i + 1}</td>
-                          <td className="py-2 pr-4 font-medium text-gray-800">{s.name}</td>
-                          <td className="py-2 pr-4 text-center text-gray-600">
+                        <tr key={s.userId} className={`border-b border-brand-border/50 ${i === 0 ? 'bg-brand-green/5' : ''}`}>
+                          <td className="py-2.5 pr-4 font-bold text-gray-500">{i + 1}</td>
+                          <td className="py-2.5 pr-4 font-semibold text-white">{s.name}</td>
+                          <td className="py-2.5 pr-4 text-center text-gray-400">
                             {s.tournamentsPlayed}/{s.tournamentsWon}
                           </td>
-                          <td className="py-2 pr-4 text-center text-gray-600">
+                          <td className="py-2.5 pr-4 text-center text-gray-400">
                             {s.matchesPlayed}/{s.matchesWon}/{s.matchesLost}
                           </td>
-                          <td className="py-2 text-center text-gray-600">
+                          <td className="py-2.5 text-center text-brand-green font-semibold">
                             {s.setsWon}
                           </td>
                         </tr>

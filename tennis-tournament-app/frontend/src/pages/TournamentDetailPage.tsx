@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   getTournament,
   registerForTournament,
@@ -169,6 +169,7 @@ function fmtDate(d: string | null | undefined) {
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -209,34 +210,44 @@ export default function TournamentDetailPage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-12 space-y-6">
+      {/* Back button */}
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-brand-green transition-colors">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver
+      </button>
+
       {/* Header */}
       <div className="card">
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-gray-800">{tournament.name}</h1>
-          <span className="shrink-0 text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+          <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
+          <span className="shrink-0 text-sm bg-brand-green/10 text-brand-green border border-brand-green/30 px-3 py-1 rounded-full font-medium">
             {T_STATUS[tournament.status] ?? tournament.status}
           </span>
         </div>
-        <div className="mt-2 text-sm text-gray-500 space-y-0.5">
-          <p>Organizador: <strong>{tournament.createdBy?.name}</strong> · {registrations.length}/{tournament.maxPlayers} jugadores
-            {tournament.league && ` · Liga: ${tournament.league.name}`}
+        <div className="mt-3 text-sm text-gray-400 space-y-1">
+          <p>Organizador: <strong className="text-gray-300">{tournament.createdBy?.name}</strong>
+            <span className="mx-1.5 text-brand-border">·</span>
+            {registrations.length}/{tournament.maxPlayers} jugadores
+            {tournament.league && <><span className="mx-1.5 text-brand-border">·</span>Liga: <strong className="text-gray-300">{tournament.league.name}</strong></>}
           </p>
-          {tournament.location && <p>Ubicación: <strong>{tournament.location}</strong></p>}
+          {tournament.location && <p>Ubicación: <strong className="text-gray-300">{tournament.location}</strong></p>}
           {(tournament.startDate || tournament.endDate) && (
-            <p>Fechas: <strong>{fmtDate(tournament.startDate)} — {fmtDate(tournament.endDate)}</strong></p>
+            <p>Fechas: <strong className="text-gray-300">{fmtDate(tournament.startDate)} — {fmtDate(tournament.endDate)}</strong></p>
           )}
         </div>
-        {actionError && <p className="mt-3 text-red-500 text-sm">{actionError}</p>}
+        {actionError && <p className="mt-3 text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">{actionError}</p>}
 
         {isAuthenticated && !isOrganizer && (
           <div className="mt-4 flex gap-2 flex-wrap">
             {!isRegistered && tournament.status === 'OPEN' && (
               <button onClick={() => run(() => registerForTournament(id!))}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Inscribirse</button>
+                className="btn-primary text-sm">Inscribirse</button>
             )}
             {isRegistered && (tournament.status === 'OPEN' || tournament.status === 'FULL') && (
               <button onClick={() => run(() => cancelRegistration(id!))}
-                className="bg-red-100 text-red-600 px-4 py-2 rounded hover:bg-red-200 text-sm">Cancelar inscripcion</button>
+                className="text-sm bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 px-4 py-2 rounded-md transition-colors">Cancelar inscripción</button>
             )}
           </div>
         )}
@@ -245,15 +256,15 @@ export default function TournamentDetailPage() {
           <div className="mt-4 flex gap-2 flex-wrap">
             {tournament.status === 'DRAFT' && (
               <button onClick={() => run(() => updateTournamentStatus(id!, 'OPEN'))}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">Abrir inscripciones</button>
+                className="btn-primary text-sm">Abrir inscripciones</button>
             )}
             {(tournament.status === 'FULL' || tournament.status === 'OPEN') && (
               <button onClick={() => run(() => generateBracket(id!))}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">Generar bracket</button>
+                className="text-sm bg-blue-500/20 border border-blue-500/50 text-blue-400 hover:bg-blue-500/30 px-4 py-2 rounded-md font-medium transition-colors">Generar bracket</button>
             )}
             {tournament.status !== 'CANCELLED' && tournament.status !== 'FINISHED' && (
               <button onClick={() => run(() => updateTournamentStatus(id!, 'CANCELLED'))}
-                className="bg-red-100 text-red-600 px-4 py-2 rounded hover:bg-red-200 text-sm">Cancelar torneo</button>
+                className="text-sm bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 px-4 py-2 rounded-md transition-colors">Cancelar torneo</button>
             )}
           </div>
         )}

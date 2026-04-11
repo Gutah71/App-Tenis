@@ -234,3 +234,30 @@ export async function sendLeagueAnnouncementEmail(
   `);
   await sendMail(to, `Anuncio en ${leagueName}`, html);
 }
+
+// ─── Contact form ─────────────────────────────────────────────────────────────
+
+export async function sendContactEmail(senderName: string, senderEmail: string, message: string) {
+  if (!process.env.GMAIL_USER) return;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-size:22px;color:#22c55e;font-weight:700;">Nuevo mensaje de contacto</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#9ca3af;">Has recibido un nuevo mensaje desde el formulario de contacto de TennisTournament.</p>
+    <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-left:4px solid #22c55e;border-radius:6px;padding:20px 24px;margin-bottom:24px;">
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr><td style="color:#9ca3af;font-size:12px;padding-bottom:4px;text-transform:uppercase;letter-spacing:0.8px;">Nombre</td></tr>
+        <tr><td style="color:#ffffff;font-size:15px;font-weight:500;padding-bottom:16px;">${senderName}</td></tr>
+        <tr><td style="color:#9ca3af;font-size:12px;padding-bottom:4px;text-transform:uppercase;letter-spacing:0.8px;">Email</td></tr>
+        <tr><td style="color:#22c55e;font-size:15px;font-weight:500;padding-bottom:16px;">${senderEmail}</td></tr>
+        <tr><td style="color:#9ca3af;font-size:12px;padding-bottom:4px;text-transform:uppercase;letter-spacing:0.8px;">Mensaje</td></tr>
+        <tr><td style="color:#e5e7eb;font-size:15px;line-height:1.7;">${message.replace(/\n/g, '<br/>')}</td></tr>
+      </table>
+    </div>
+  `);
+  await transporter.sendMail({
+    from: `"TennisTournament Contact" <${process.env.GMAIL_USER}>`,
+    to: process.env.GMAIL_USER,
+    replyTo: senderEmail,
+    subject: `Contacto de ${senderName} — TennisTournament`,
+    html,
+  });
+}

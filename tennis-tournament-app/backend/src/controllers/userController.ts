@@ -42,6 +42,26 @@ export async function getProfile(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
+export async function updateName(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { name } = req.body;
+    if (!name || typeof name !== 'string') {
+      res.status(400).json({ error: 'name es requerido' });
+      return;
+    }
+    const user = await userService.updateName(req.userId!, name);
+    res.json(user);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Error interno';
+    res.status(400).json({ error: message });
+  }
+}
+
+export async function getMyTournaments(req: AuthRequest, res: Response): Promise<void> {
+  const tournaments = await userService.getMyTournaments(req.userId!);
+  res.json(tournaments);
+}
+
 export async function getStats(req: AuthRequest, res: Response): Promise<void> {
   const stats = await userService.getUserStats(req.userId!);
   res.json(stats);

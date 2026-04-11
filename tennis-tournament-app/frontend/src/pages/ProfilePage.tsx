@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, getUserStats } from '../services/userService';
+import { getProfile, getUserStats, updateName } from '../services/userService';
 import type { User, UserStats } from '../types';
 
 export default function ProfilePage() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([getProfile(), getUserStats()])
@@ -17,6 +22,22 @@ export default function ProfilePage() {
   }, []);
 
   const displayed = profile ?? authUser;
+
+  async function handleSaveName() {
+    if (!newName.trim()) return;
+    setNameSaving(true);
+    setNameError('');
+    try {
+      const updated = await updateName(newName.trim());
+      setProfile(updated);
+      updateUser(updated);
+      setEditingName(false);
+    } catch (e: unknown) {
+      setNameError(e instanceof Error ? e.message : 'Error al actualizar');
+    } finally {
+      setNameSaving(false);
+    }
+  }
 
   if (loading) return <p className="text-center py-16 text-gray-400">Cargando perfil...</p>;
   if (!displayed) return <p className="text-center py-16 text-gray-500">No has iniciado sesión.</p>;
@@ -29,8 +50,38 @@ export default function ProfilePage() {
         <h1 className="section-title">Mi perfil</h1>
         <dl className="mt-6 space-y-5">
           <div className="pb-4 border-b border-brand-border">
-            <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Nombre</dt>
-            <dd className="font-medium text-white mt-1">{displayed.name}</dd>
+            <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Nombre de usuario</dt>
+            {editingName ? (
+              <div className="space-y-2">
+                <input
+                  autoFocus
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
+                  className="input-field"
+                  placeholder="Nuevo nombre"
+                  maxLength={50}
+                />
+                {nameError && <p className="text-xs text-red-400">{nameError}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => void handleSaveName()} disabled={nameSaving || !newName.trim()} className="btn-primary text-sm disabled:opacity-50">
+                    {nameSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button onClick={() => { setEditingName(false); setNameError(''); }} className="btn-secondary text-sm">Cancelar</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-4">
+                <dd className="font-medium text-white">{displayed.name}</dd>
+                <button
+                  onClick={() => { setNewName(displayed.name); setEditingName(true); }}
+                  className="text-xs text-brand-green hover:text-brand-green-light border border-brand-green/40 hover:border-brand-green px-3 py-1.5 rounded transition-colors"
+                >
+                  Editar nombre
+                </button>
+              </div>
+            )}
           </div>
           <div className="pb-4 border-b border-brand-border">
             <dt className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Email</dt>

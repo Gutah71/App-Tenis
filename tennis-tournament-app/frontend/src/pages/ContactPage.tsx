@@ -1,4 +1,32 @@
+import { useState, FormEvent } from 'react';
+import request from '../services/api';
+
 export default function ContactPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await request('/contact', {
+        method: 'POST',
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim() }),
+      });
+      setSuccess(true);
+      setName(''); setEmail(''); setMessage('');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al enviar el mensaje');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto px-6 py-12">
       <div className="mb-10">
@@ -7,36 +35,58 @@ export default function ContactPage() {
       </div>
 
       <div className="card mb-8 space-y-5">
-        <div>
-          <label className="label">Nombre</label>
-          <input
-            type="text"
-            className="input-field"
-            placeholder="Tu nombre"
-          />
-        </div>
-        <div>
-          <label className="label">Email</label>
-          <input
-            type="email"
-            className="input-field"
-            placeholder="tu@email.com"
-          />
-        </div>
-        <div>
-          <label className="label">Mensaje</label>
-          <textarea
-            rows={5}
-            className="input-field resize-none"
-            placeholder="Escribe tu mensaje aquí..."
-          />
-        </div>
-        <button
-          type="button"
-          className="btn-primary w-full"
-        >
-          Enviar mensaje
-        </button>
+        {success && (
+          <div className="bg-brand-green/10 border border-brand-green/30 text-brand-green rounded-lg px-4 py-3 text-sm font-medium">
+            ¡Mensaje enviado! Nos pondremos en contacto contigo pronto.
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="label">Nombre</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input-field"
+              placeholder="Tu nombre"
+            />
+          </div>
+          <div>
+            <label className="label">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
+              placeholder="tu@email.com"
+            />
+          </div>
+          <div>
+            <label className="label">Mensaje</label>
+            <textarea
+              rows={5}
+              required
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="input-field resize-none"
+              placeholder="Escribe tu mensaje aquí..."
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full"
+          >
+            {loading ? 'Enviando...' : 'Enviar mensaje'}
+          </button>
+        </form>
       </div>
 
       <div className="card">
