@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { listLeagues, updateLeague } from '../services/leagueService';
+import { getMyLeagues } from '../services/userService';
 import type { League } from '../types';
 
 export default function MyLeaguesPage() {
   const { user } = useAuth();
+  const isOrganizer = user?.role === 'ORGANIZER';
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,8 +18,12 @@ export default function MyLeaguesPage() {
   async function load() {
     setLoading(true);
     try {
-      const all = await listLeagues();
-      setLeagues(all.filter((l) => l.createdById === user?.id));
+      if (isOrganizer) {
+        const all = await listLeagues();
+        setLeagues(all.filter((l) => l.createdById === user?.id));
+      } else {
+        setLeagues(await getMyLeagues());
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -52,7 +58,7 @@ export default function MyLeaguesPage() {
     <div className="w-full max-w-7xl mx-auto px-6 py-12">
       <div className="mb-10">
         <h1 className="section-title">Mis ligas</h1>
-        <p className="section-subtitle">Organiza y gestiona tus ligas de tenis</p>
+        <p className="section-subtitle">{isOrganizer ? 'Organiza y gestiona tus ligas de tenis' : 'Ligas en las que participas'}</p>
       </div>
       {error && <div className="card mb-6 text-red-500 text-sm">{error}</div>}
 
@@ -61,12 +67,12 @@ export default function MyLeaguesPage() {
           <svg className="w-12 h-12 mx-auto mb-4 text-gray-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4" />
           </svg>
-          <p className="text-gray-400 mb-6">No has creado ninguna liga todavía</p>
+          <p className="text-gray-400 mb-6">{isOrganizer ? 'No has creado ninguna liga todavía' : 'Aún no perteneces a ninguna liga'}</p>
           <Link
             to="/leagues"
             className="btn-primary inline-flex items-center gap-2"
           >
-            Crear primera liga
+            {isOrganizer ? 'Crear primera liga' : 'Explorar ligas'}
           </Link>
         </div>
       ) : (
@@ -118,14 +124,16 @@ export default function MyLeaguesPage() {
                       to={`/leagues/${l.id}`}
                       className="text-xs btn-primary"
                     >
-                      Gestionar
+                      {isOrganizer ? 'Gestionar' : 'Ver liga'}
                     </Link>
-                    <button
-                      onClick={() => startEdit(l)}
-                      className="text-xs bg-brand-surface-2 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors"
-                    >
-                      Editar
-                    </button>
+                    {isOrganizer && (
+                      <button
+                        onClick={() => startEdit(l)}
+                        className="text-xs bg-brand-surface-2 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors"
+                      >
+                        Editar
+                      </button>
+                    )}
                   </div>
                 </>
               )}

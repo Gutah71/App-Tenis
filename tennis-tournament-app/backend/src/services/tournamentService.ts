@@ -220,6 +220,37 @@ export async function kickPlayer(tournamentId: string, targetUserId: string, req
   }
 }
 
+export async function updateTournament(
+  id: string,
+  data: { name?: string; location?: string; startDate?: string | null; endDate?: string | null; maxPlayers?: number },
+  requesterId: string,
+) {
+  const tournament = await prisma.tournament.findUnique({ where: { id } });
+  if (!tournament || tournament.deletedAt) throw new Error('Torneo no encontrado');
+  if (tournament.createdById !== requesterId) throw new Error('Sin permisos');
+
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) {
+    const trimmed = data.name.trim();
+    if (!trimmed) throw new Error('El nombre no puede estar vacío');
+    updateData.name = trimmed;
+  }
+  if (data.location !== undefined) updateData.location = data.location?.trim() || null;
+  if (data.startDate !== undefined) updateData.startDate = data.startDate ? new Date(data.startDate) : null;
+  if (data.endDate !== undefined) updateData.endDate = data.endDate ? new Date(data.endDate) : null;
+  if (data.maxPlayers !== undefined) {
+    const n = Number(data.maxPlayers);
+    if (n < 2) throw new Error('maxPlayers debe ser al menos 2');
+    if ((n & (n - 1)) !== 0) throw new Error('maxPlayers debe ser potencia de 2');
+    if (tournament.status !== 'OPEN') throw new Error('Solo se puede cambiar el número de plazas con el torneo en estado OPEN');
+    updateData.maxPlayers = n;
+  }
+
+  const updated = await prisma.tournament.update({ where: { id }, data: updateData });
+  const { password: _, ...rest } = updated;
+  return rest;
+}
+
 export async function updateTournamentStatus(id: string, status: TournamentStatus, requesterId: string) {
   const tournament = await prisma.tournament.findUnique({ where: { id } });
   if (!tournament || tournament.deletedAt) throw new Error('Torneo no encontrado');

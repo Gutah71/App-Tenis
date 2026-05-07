@@ -92,6 +92,16 @@ export async function getMyTournaments(req: AuthRequest, res: Response): Promise
   res.json(tournaments);
 }
 
+export async function getMyLeagues(req: AuthRequest, res: Response): Promise<void> {
+  const leagues = await userService.getMyLeagues(req.userId!);
+  res.json(leagues);
+}
+
+export async function getMyMatches(req: AuthRequest, res: Response): Promise<void> {
+  const matches = await userService.getMyMatches(req.userId!);
+  res.json(matches);
+}
+
 export async function getStats(req: AuthRequest, res: Response): Promise<void> {
   const stats = await userService.getUserStats(req.userId!);
   res.json(stats);
