@@ -94,7 +94,7 @@ export async function scheduleMatch(
   requesterId: string
 ) {
   const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
-  if (!tournament) throw new Error('Torneo no encontrado');
+  if (!tournament || tournament.deletedAt) throw new Error('Torneo no encontrado');
   if (tournament.createdById !== requesterId) throw new Error('Sin permisos');
 
   const date = new Date(scheduledDate);

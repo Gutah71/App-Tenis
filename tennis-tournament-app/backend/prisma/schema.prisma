@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         String   @default("PLAYER")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  email                 String   @unique
+  passwordHash          String
+  role                  String   @default("PLAYER")
+  notificationsEnabled  Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   leagueMemberships  LeagueMember[]
   createdLeagues     League[]       @relation("LeagueCreator")
@@ -30,6 +31,8 @@ model User {
 model League {
   id          String   @id @default(cuid())
   name        String
+  isPrivate   Boolean  @default(false)
+  password    String?
   createdById String
   createdAt   DateTime @default(now())
 
@@ -68,11 +71,14 @@ model Tournament {
   startDate   DateTime?
   endDate     DateTime?
   maxPlayers  Int
-  status      String    @default("DRAFT")
+  isPrivate   Boolean   @default(false)
+  password    String?
+  status      String    @default("OPEN")
   leagueId    String?
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   createdBy     User           @relation("TournamentCreator", fields: [createdById], references: [id])
   league        League?        @relation(fields: [leagueId], references: [id])

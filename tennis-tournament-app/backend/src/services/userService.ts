@@ -7,14 +7,15 @@ const JWT_SECRET = process.env.JWT_SECRET ?? 'changeme-in-production';
 const SALT_ROUNDS = 10;
 
 export async function register(name: string, email: string, password: string, role: string) {
-  const exists = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const exists = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (exists) throw new Error('El email ya está registrado');
 
   if (role !== 'PLAYER' && role !== 'ORGANIZER') throw new Error('Rol inválido');
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role },
+    data: { name, email: normalizedEmail, passwordHash, role },
   });
 
   const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
@@ -26,7 +27,8 @@ export async function register(name: string, email: string, password: string, ro
 }
 
 export async function login(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) throw new Error('Credenciales incorrectas');
 
   const valid = await bcrypt.compare(password, user.passwordHash);
@@ -39,10 +41,20 @@ export async function login(email: string, password: string) {
 export async function getProfile(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, notificationsEnabled: true, createdAt: true },
   });
   if (!user) throw new Error('Usuario no encontrado');
   return user;
+}
+
+export async function getPublicProfile(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+  });
+  if (!user) throw new Error('Usuario no encontrado');
+  const stats = await getUserStats(userId);
+  return { ...user, stats };
 }
 
 export async function updateName(userId: string, name: string) {
@@ -56,9 +68,31 @@ export async function updateName(userId: string, name: string) {
   return user;
 }
 
+export async function updateEmail(userId: string, email: string) {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) throw new Error('El email no puede estar vacío');
+  const existing = await prisma.user.findUnique({ where: { email: trimmed } });
+  if (existing && existing.id !== userId) throw new Error('Ese email ya está en uso');
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { email: trimmed },
+    select: { id: true, name: true, email: true, role: true },
+  });
+  return user;
+}
+
+export async function updateNotifications(userId: string, enabled: boolean) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { notificationsEnabled: enabled },
+    select: { id: true, name: true, email: true, role: true, notificationsEnabled: true },
+  });
+  return user;
+}
+
 export async function getMyTournaments(userId: string) {
   return prisma.tournament.findMany({
-    where: { registrations: { some: { userId } } },
+    where: { deletedAt: null, registrations: { some: { userId } } },
     include: {
       createdBy: { select: { id: true, name: true } },
       league: { select: { id: true, name: true } },

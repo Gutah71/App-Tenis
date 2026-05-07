@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import prisma from '../lib/prisma';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -53,6 +54,9 @@ function baseTemplate(content: string): string {
 
 async function sendMail(to: string, subject: string, html: string) {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+  // Check if the recipient has notifications enabled
+  const user = await prisma.user.findUnique({ where: { email: to }, select: { notificationsEnabled: true } });
+  if (user && !user.notificationsEnabled) return;
   try {
     await transporter.sendMail({
       from: `"TennisTournament" <${process.env.GMAIL_USER}>`,

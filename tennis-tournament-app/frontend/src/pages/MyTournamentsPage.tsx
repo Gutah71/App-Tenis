@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Tournament } from '../types';
 
 const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Borrador', OPEN: 'Abierto', FULL: 'Completo',
+  OPEN: 'Abierto', FULL: 'Completo',
   IN_PROGRESS: 'En curso', FINISHED: 'Finalizado', CANCELLED: 'Cancelado',
 };
 
@@ -66,7 +66,14 @@ export default function MyTournamentsPage() {
               to={`/tournaments/${t.id}`}
               className="card hover:border-brand-green/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group flex flex-col"
             >
-              <h2 className="font-semibold text-white text-base group-hover:text-brand-green transition-colors mb-3 flex-1">{t.name}</h2>
+              <div className="flex items-start justify-between gap-2 mb-3 flex-1">
+                <h2 className="font-semibold text-white text-base group-hover:text-brand-green transition-colors flex-1">{t.name}</h2>
+                {t.isPrivate && (
+                  <span className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap bg-amber-500/10 border border-amber-500/50 text-amber-400">
+                    Privado
+                  </span>
+                )}
+              </div>
               <div className="space-y-3 pt-3 border-t border-brand-border">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">Estado:</span>

@@ -36,7 +36,7 @@ export default function MyLeaguesPage() {
     if (!editName.trim()) return;
     setSaving(true);
     try {
-      await updateLeague(id, editName.trim());
+      await updateLeague(id, { name: editName.trim() });
       setEditId(null);
       await load();
     } catch (e: unknown) {
@@ -99,9 +99,16 @@ export default function MyLeaguesPage() {
               ) : (
                 <>
                   <div className="flex-1">
-                    <Link to={`/leagues/${l.id}`} className="font-semibold text-white hover:text-brand-green transition-colors">
-                      {l.name}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/leagues/${l.id}`} className="font-semibold text-white hover:text-brand-green transition-colors">
+                        {l.name}
+                      </Link>
+                      {l.isPrivate && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/10 border border-amber-500/50 text-amber-400">
+                          Privada
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {l._count?.members ?? 0} miembros · {l._count?.tournaments ?? 0} torneos
                     </p>

@@ -26,6 +26,21 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
 }
 
+/** Same as authenticate, but does not fail when there is no/invalid token. */
+export function optionalAuthenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
+  const header = req.headers.authorization;
+  if (header && header.startsWith('Bearer ')) {
+    try {
+      const payload = jwt.verify(header.slice(7), JWT_SECRET) as { userId: string; role: string };
+      req.userId = payload.userId;
+      req.userRole = payload.role;
+    } catch {
+      // ignore – treat as anonymous
+    }
+  }
+  next();
+}
+
 export function requireOrganizer(req: AuthRequest, res: Response, next: NextFunction): void {
   if (req.userRole !== 'ORGANIZER') {
     res.status(403).json({ error: 'Se requiere rol ORGANIZER' });

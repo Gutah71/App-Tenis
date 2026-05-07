@@ -1,7 +1,6 @@
 export type Role = 'PLAYER' | 'ORGANIZER';
 
 export type TournamentStatus =
-  | 'DRAFT'
   | 'OPEN'
   | 'FULL'
   | 'IN_PROGRESS'
@@ -20,6 +19,7 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  notificationsEnabled?: boolean;
   createdAt?: string;
 }
 
@@ -53,9 +53,16 @@ export interface UserStats {
   setsLost: number;
 }
 
+export interface PublicProfile extends User {
+  stats: UserStats;
+}
+
 export interface League {
   id: string;
   name: string;
+  isPrivate?: boolean;
+  restricted?: boolean;
+  viewerIsMember?: boolean;
   createdById: string;
   createdBy?: { id: string; name: string };
   createdAt?: string;
@@ -73,6 +80,9 @@ export interface Tournament {
   id: string;
   name: string;
   maxPlayers: number;
+  isPrivate?: boolean;
+  restricted?: boolean;
+  viewerIsRegistered?: boolean;
   status: TournamentStatus;
   leagueId?: string | null;
   location?: string | null;

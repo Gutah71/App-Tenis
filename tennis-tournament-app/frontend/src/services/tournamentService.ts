@@ -18,6 +18,8 @@ export async function createTournament(data: {
   endDate?: string;
   leagueId?: string;
   status?: string;
+  isPrivate?: boolean;
+  password?: string;
 }): Promise<Tournament> {
   return request<Tournament>('/tournaments', { method: 'POST', body: JSON.stringify(data) });
 }
@@ -26,16 +28,27 @@ export async function deleteTournament(id: string): Promise<void> {
   return request<void>(`/tournaments/${id}`, { method: 'DELETE' });
 }
 
-export async function registerForTournament(id: string): Promise<void> {
-  return request<void>(`/tournaments/${id}/register`, { method: 'POST' });
+export async function registerForTournament(id: string, password?: string): Promise<void> {
+  return request<void>(`/tournaments/${id}/register`, { method: 'POST', body: JSON.stringify({ password }) });
 }
 
 export async function cancelRegistration(id: string): Promise<void> {
   return request<void>(`/tournaments/${id}/register`, { method: 'DELETE' });
 }
 
+export async function kickPlayer(tournamentId: string, userId: string): Promise<void> {
+  return request<void>(`/tournaments/${tournamentId}/registrations/${userId}`, { method: 'DELETE' });
+}
+
 export async function updateTournamentStatus(id: string, status: string): Promise<Tournament> {
   return request<Tournament>(`/tournaments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+}
+
+export async function updateTournamentPrivacy(
+  id: string,
+  data: { isPrivate?: boolean; password?: string },
+): Promise<Tournament> {
+  return request<Tournament>(`/tournaments/${id}/privacy`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 export async function getMatches(tournamentId: string): Promise<Match[]> {

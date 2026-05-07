@@ -13,7 +13,6 @@
 export type Role = 'PLAYER' | 'ORGANIZER';
 
 export type TournamentStatus =
-  | 'DRAFT'
   | 'OPEN'
   | 'FULL'
   | 'IN_PROGRESS'

@@ -16,7 +16,9 @@ export default function CreateTournamentPage() {
   const [location, setLocation] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [status, setStatus] = useState<'DRAFT' | 'OPEN'>('OPEN');
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [password, setPassword] = useState('');
+  const status = 'OPEN';
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -41,6 +43,8 @@ export default function CreateTournamentPage() {
         endDate: endDate || undefined,
         leagueId,
         status,
+        isPrivate,
+        password: isPrivate ? password : undefined,
       });
       navigate(`/tournaments/${t.id}`);
     } catch (err: unknown) {
@@ -91,14 +95,21 @@ export default function CreateTournamentPage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="label">Estado inicial</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'OPEN')}
-              className="input-field">
-              <option value="OPEN">Abierto (inscripciones habilitadas)</option>
-              <option value="DRAFT">Borrador (sin inscripciones)</option>
-            </select>
+          <div className="flex items-center gap-3">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked={isPrivate} onChange={(e) => { setIsPrivate(e.target.checked); if (!e.target.checked) setPassword(''); }}
+                className="sr-only peer" />
+              <div className="w-9 h-5 bg-brand-surface-3 border border-brand-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-green peer-checked:after:bg-white"></div>
+            </label>
+            <span className="text-sm text-gray-300">Torneo privado</span>
           </div>
+          {isPrivate && (
+            <div>
+              <label className="label">Contraseña del torneo</label>
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="input-field" placeholder="Contraseña para unirse" />
+            </div>
+          )}
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? 'Creando...' : 'Crear torneo'}
           </button>

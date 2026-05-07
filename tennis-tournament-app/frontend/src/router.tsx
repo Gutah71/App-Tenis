@@ -12,6 +12,7 @@ import LeagueDetailPage from './pages/LeagueDetailPage';
 import CreateLeaguePage from './pages/CreateLeaguePage';
 import MyLeaguesPage from './pages/MyLeaguesPage';
 import ProfilePage from './pages/ProfilePage';
+import PlayerProfilePage from './pages/PlayerProfilePage';
 import MyTournamentsPage from './pages/MyTournamentsPage';
 import ContactPage from './pages/ContactPage';
 
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'profile', element: <ProfilePage /> },
+      { path: 'players/:id', element: <PlayerProfilePage /> },
       { path: 'my-tournaments', element: <MyTournamentsPage /> },
       { path: 'contact', element: <ContactPage /> },
     ],
