@@ -174,6 +174,13 @@ function fmtDateTime(d: string | null | undefined) {
   return new Date(d).toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function toLocalInputValue(isoString: string | null | undefined): string {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated } = useAuth();
@@ -252,8 +259,8 @@ export default function TournamentDetailPage() {
     if (!tournament) return;
     setEditName(tournament.name);
     setEditLocation(tournament.location ?? '');
-    setEditStartDate(tournament.startDate ? tournament.startDate.slice(0, 16) : '');
-    setEditEndDate(tournament.endDate ? tournament.endDate.slice(0, 16) : '');
+    setEditStartDate(toLocalInputValue(tournament.startDate));
+    setEditEndDate(toLocalInputValue(tournament.endDate));
     setEditMaxPlayers(String(tournament.maxPlayers));
     setEditError('');
     setEditingTournament(true);
@@ -267,8 +274,8 @@ export default function TournamentDetailPage() {
       await updateTournament(id, {
         name: editName,
         location: editLocation,
-        startDate: editStartDate || null,
-        endDate: editEndDate || null,
+        startDate: editStartDate ? new Date(editStartDate).toISOString() : null,
+        endDate: editEndDate ? new Date(editEndDate).toISOString() : null,
         maxPlayers: editMaxPlayers ? Number(editMaxPlayers) : undefined,
       });
       setEditingTournament(false);
@@ -668,7 +675,7 @@ export default function TournamentDetailPage() {
                                 max={tournament.endDate ? tournament.endDate.split('T')[0] + 'T23:59' : undefined}
                                 className="text-xs input-field" />
                               <button onClick={() => run(async () => {
-                                await scheduleMatch(id!, m.id, scheduleDate);
+                                await scheduleMatch(id!, m.id, new Date(scheduleDate).toISOString());
                                 setScheduleMatchId(null);
                               })} disabled={!scheduleDate}
                                 className="text-xs bg-blue-500/20 border border-blue-500/50 text-blue-400 px-3 py-1 rounded hover:bg-blue-500/30 disabled:opacity-40 font-medium transition-colors">
@@ -677,7 +684,7 @@ export default function TournamentDetailPage() {
                               <button onClick={() => setScheduleMatchId(null)} className="text-xs text-gray-500 hover:text-gray-400 font-medium transition-colors">Cancelar</button>
                             </div>
                           ) : (
-                            <button onClick={() => { setScheduleMatchId(m.id); setScheduleDate(m.scheduledDate ? m.scheduledDate.slice(0, 16) : ''); }}
+                            <button onClick={() => { setScheduleMatchId(m.id); setScheduleDate(toLocalInputValue(m.scheduledDate)); }}
                               className="text-xs bg-brand-surface-3 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1 rounded font-medium transition-colors">
                               {m.scheduledDate ? 'Cambiar fecha' : 'Programar fecha'}
                             </button>
