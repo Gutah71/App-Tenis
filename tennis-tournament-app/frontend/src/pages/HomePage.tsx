@@ -91,7 +91,7 @@ export default function HomePage() {
             <span className="inline-flex items-center gap-2 bg-brand-green/10 border border-brand-green/30 text-brand-green text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-wider">
               Plataforma de tenis
             </span>
-            <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-5">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-5 break-words">
               Gestiona torneos de tenis{' '}
               <span className="text-brand-green">sin complicaciones</span>
             </h1>

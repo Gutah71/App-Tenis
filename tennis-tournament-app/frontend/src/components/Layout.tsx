@@ -25,7 +25,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-brand-black flex flex-col">
       <header className="bg-brand-surface-1 border-b border-brand-border sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 py-3.5 flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3.5 flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => setSidebarOpen((o) => !o)}
             className="p-2 rounded-lg hover:bg-brand-surface-3 text-gray-400 hover:text-gray-100 transition-colors"
@@ -44,7 +44,7 @@ export default function Layout() {
                 <path d="M2 12 C8 6, 16 18, 22 12"/>
               </svg>
             </div>
-            <span className="font-bold text-base tracking-tight">
+            <span className="font-bold text-base tracking-tight hidden sm:block">
               <span className="text-brand-green">Tennis</span>
               <span className="text-white">Tournament</span>
             </span>
@@ -71,12 +71,12 @@ export default function Layout() {
               </>
             ) : (
               <>
-                <NavLink to="/login" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">
+                <NavLink to="/login" className="text-sm text-gray-400 hover:text-gray-100 transition-colors hidden sm:block">
                   Iniciar sesión
                 </NavLink>
                 <NavLink
                   to="/register"
-                  className="bg-brand-green text-black px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-brand-green-light transition-colors"
+                  className="bg-brand-green text-black px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold hover:bg-brand-green-light transition-colors whitespace-nowrap"
                 >
                   Registrarse
                 </NavLink>
