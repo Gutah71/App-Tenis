@@ -57,12 +57,12 @@ export default function Layout() {
               <>
                 <NavLink
                   to="/profile"
-                  className="text-sm text-gray-300 hover:text-brand-green font-medium hidden sm:flex items-center gap-2 transition-colors"
+                  className="text-sm text-gray-300 hover:text-brand-green font-medium flex items-center gap-2 transition-colors"
                 >
                   <div className="w-7 h-7 rounded-full bg-brand-green/20 border border-brand-green/30 flex items-center justify-center text-brand-green text-xs font-bold">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
-                  <span>{user?.name}</span>
+                  <span className="hidden sm:inline">{user?.name}</span>
                 </NavLink>
                 <button
                   onClick={handleLogout}
