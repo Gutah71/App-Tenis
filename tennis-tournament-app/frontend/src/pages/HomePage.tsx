@@ -67,7 +67,7 @@ const steps = [
 
 const stats = [
   { value: 'Ilimitado', label: 'Jugadores por liga' },
-  { value: '2–128', label: 'Plazas por torneo' },
+  { value: '2–32', label: 'Plazas por torneo' },
   { value: '100%', label: 'Gratuito' },
   { value: '24/7', label: 'Disponibilidad' },
 ];
