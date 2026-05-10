@@ -44,9 +44,11 @@ export default function Layout() {
                 <path d="M2 12 C8 6, 16 18, 22 12"/>
               </svg>
             </div>
-            <span className="font-bold text-base tracking-tight hidden sm:block">
-              <span className="text-brand-green">Tennis</span>
-              <span className="text-white">Tournament</span>
+            <span className="font-bold text-base tracking-tight">
+              <span className="text-brand-green sm:hidden">T</span>
+              <span className="text-white sm:hidden">T</span>
+              <span className="text-brand-green hidden sm:inline">Tennis</span>
+              <span className="text-white hidden sm:inline">Tournament</span>
             </span>
           </NavLink>
 
@@ -71,7 +73,7 @@ export default function Layout() {
               </>
             ) : (
               <>
-                <NavLink to="/login" className="text-sm text-gray-400 hover:text-gray-100 transition-colors hidden sm:block">
+                <NavLink to="/login" className="text-sm text-gray-400 hover:text-gray-100 transition-colors">
                   Iniciar sesión
                 </NavLink>
                 <NavLink
