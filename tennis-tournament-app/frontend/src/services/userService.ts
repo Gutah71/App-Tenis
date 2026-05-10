@@ -1,5 +1,5 @@
 import request from './api';
-import type { AuthResponse, User, UserStats, PublicProfile, Tournament } from '../types';
+import type { AuthResponse, User, UserStats, PublicProfile, Tournament, League, Match } from '../types';
 
 export async function register(name: string, email: string, password: string, role: string): Promise<AuthResponse> {
   return request<AuthResponse>('/users/register', {
@@ -37,6 +37,14 @@ export async function getUserStats(): Promise<UserStats> {
 
 export async function getMyTournaments(): Promise<Tournament[]> {
   return request<Tournament[]>('/users/me/tournaments');
+}
+
+export async function getMyLeagues(): Promise<League[]> {
+  return request<League[]>('/users/me/leagues');
+}
+
+export async function getMyMatches(): Promise<(Match & { tournament: { id: string; name: string } })[]> {
+  return request<(Match & { tournament: { id: string; name: string } })[]>('/users/me/matches');
 }
 
 export async function getPublicProfile(id: string): Promise<PublicProfile> {

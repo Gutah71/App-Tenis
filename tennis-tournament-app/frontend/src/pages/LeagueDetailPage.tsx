@@ -506,7 +506,7 @@ export default function LeagueDetailPage() {
 
           {/* Stats */}
           {tab === 'stats' && (
-            !stats || stats.length === 0
+            !stats || stats.filter(s => s.userId !== league?.createdById).length === 0
               ? <p className="text-gray-500 text-sm">Aún no hay estadísticas.</p>
               : <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -520,8 +520,8 @@ export default function LeagueDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.map((s, i) => (
-                        <tr key={s.userId} className={`border-b border-brand-border/50 transition-colors hover:bg-brand-surface-3 ${i === 0 ? 'bg-brand-green/5' : ''}`}>
+                      {stats.filter(s => s.userId !== league?.createdById).map((s, i) => (
+                        <tr key={s.userId} className={`border-b border-brand-border/50 transition-colors hover:bg-brand-surface-3 ${i % 2 === 0 ? 'bg-brand-green/5' : ''}`}>
                           <td className="py-2.5 pr-4 font-bold text-gray-500">{i + 1}</td>
                           <td className="py-2.5 pr-4 font-semibold text-white"><Link to={`/players/${s.userId}`} className="hover:text-brand-green transition-colors">{s.name}</Link></td>
                           <td className="py-2.5 pr-4 text-center text-gray-400">

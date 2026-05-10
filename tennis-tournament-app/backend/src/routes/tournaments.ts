@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   createTournament, listTournaments, getTournament,
-  registerPlayer, cancelRegistration, kickPlayer, updateStatus, deleteTournament, updatePrivacy,
+  registerPlayer, cancelRegistration, kickPlayer, updateStatus, updateTournament, deleteTournament, updatePrivacy,
 } from '../controllers/tournamentController';
 import { authenticate, optionalAuthenticate, requireOrganizer } from '../middlewares/auth';
 
@@ -13,6 +13,7 @@ router.post('/', authenticate, requireOrganizer, createTournament);
 router.post('/:id/register', authenticate, registerPlayer);
 router.delete('/:id/register', authenticate, cancelRegistration);
 router.delete('/:id/registrations/:userId', authenticate, requireOrganizer, kickPlayer);
+router.patch('/:id', authenticate, requireOrganizer, updateTournament);
 router.patch('/:id/status', authenticate, requireOrganizer, updateStatus);
 router.patch('/:id/privacy', authenticate, requireOrganizer, updatePrivacy);
 router.delete('/:id', authenticate, requireOrganizer, deleteTournament);

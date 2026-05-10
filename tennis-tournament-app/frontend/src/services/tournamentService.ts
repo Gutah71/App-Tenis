@@ -51,6 +51,13 @@ export async function updateTournamentPrivacy(
   return request<Tournament>(`/tournaments/${id}/privacy`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
+export async function updateTournament(
+  id: string,
+  data: { name?: string; location?: string; startDate?: string | null; endDate?: string | null; maxPlayers?: number },
+): Promise<Tournament> {
+  return request<Tournament>(`/tournaments/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
 export async function getMatches(tournamentId: string): Promise<Match[]> {
   return request<Match[]>(`/tournaments/${tournamentId}/matches`);
 }

@@ -102,3 +102,17 @@ export async function updatePrivacy(req: AuthRequest, res: Response): Promise<vo
     res.status(400).json({ error: err instanceof Error ? err.message : 'Error interno' });
   }
 }
+
+export async function updateTournament(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { name, location, startDate, endDate, maxPlayers } = req.body ?? {};
+    const tournament = await tournamentService.updateTournament(
+      req.params.id,
+      { name, location, startDate, endDate, maxPlayers },
+      req.userId!,
+    );
+    res.json(tournament);
+  } catch (err: unknown) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Error interno' });
+  }
+}

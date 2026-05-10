@@ -73,7 +73,8 @@ const stats = [
 ];
 
 export default function HomePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isOrganizer = user?.role === 'ORGANIZER';
 
   return (
     <div className="w-full">
@@ -100,14 +101,25 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap gap-3">
               {isAuthenticated ? (
-                <>
-                  <Link to="/tournaments" className="btn-primary text-sm px-6 py-3">
-                    Ver torneos
-                  </Link>
-                  <Link to="/leagues" className="btn-secondary text-sm px-6 py-3">
-                    Mis ligas
-                  </Link>
-                </>
+                isOrganizer ? (
+                  <>
+                    <Link to="/my-tournaments" className="btn-primary text-sm px-6 py-3">
+                      Mis torneos
+                    </Link>
+                    <Link to="/my-leagues" className="btn-secondary text-sm px-6 py-3">
+                      Mis ligas
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/tournaments" className="btn-primary text-sm px-6 py-3">
+                      Ver torneos
+                    </Link>
+                    <Link to="/leagues" className="btn-secondary text-sm px-6 py-3">
+                      Ver ligas
+                    </Link>
+                  </>
+                )
               ) : (
                 <>
                   <Link to="/register" className="btn-primary text-sm px-6 py-3">

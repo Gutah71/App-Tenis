@@ -102,6 +102,37 @@ export async function getMyTournaments(userId: string) {
   });
 }
 
+export async function getMyLeagues(userId: string) {
+  const memberships = await prisma.leagueMember.findMany({
+    where: { userId },
+    include: {
+      league: {
+        include: {
+          createdBy: { select: { id: true, name: true } },
+          _count: { select: { members: true, tournaments: { where: { deletedAt: null } } } },
+        },
+      },
+    },
+  });
+  return memberships.map((m) => m.league);
+}
+
+export async function getMyMatches(userId: string) {
+  return prisma.match.findMany({
+    where: {
+      OR: [{ player1Id: userId }, { player2Id: userId }],
+      scheduledDate: { not: null },
+    },
+    include: {
+      player1: { select: { id: true, name: true } },
+      player2: { select: { id: true, name: true } },
+      winner: { select: { id: true, name: true } },
+      tournament: { select: { id: true, name: true } },
+    },
+    orderBy: { scheduledDate: 'asc' },
+  });
+}
+
 function parseSets(score: string | null, isPlayer1: boolean): { won: number; lost: number } {
   if (!score) return { won: 0, lost: 0 };
   let won = 0, lost = 0;

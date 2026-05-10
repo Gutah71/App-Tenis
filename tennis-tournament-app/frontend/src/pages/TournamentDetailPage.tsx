@@ -12,6 +12,7 @@ import {
   organizerResolve,
   updateTournamentStatus,
   updateTournamentPrivacy,
+  updateTournament,
   scheduleMatch,
 } from '../services/tournamentService';
 import { useAuth } from '../context/AuthContext';
@@ -168,6 +169,11 @@ function fmtDate(d: string | null | undefined) {
   return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function fmtDateTime(d: string | null | undefined) {
+  if (!d) return null;
+  return new Date(d).toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated } = useAuth();
@@ -191,6 +197,16 @@ export default function TournamentDetailPage() {
   const [privacyPassword, setPrivacyPassword] = useState('');
   const [privacyError, setPrivacyError] = useState('');
   const [savingPrivacy, setSavingPrivacy] = useState(false);
+
+  // Edit tournament (organizer only)
+  const [editingTournament, setEditingTournament] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [editMaxPlayers, setEditMaxPlayers] = useState('');
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function load() {
     if (!id) return;
@@ -230,6 +246,38 @@ export default function TournamentDetailPage() {
     setPrivacyPassword('');
     setPrivacyError('');
     setEditingPrivacy(true);
+  }
+
+  function openTournamentEditor() {
+    if (!tournament) return;
+    setEditName(tournament.name);
+    setEditLocation(tournament.location ?? '');
+    setEditStartDate(tournament.startDate ? tournament.startDate.slice(0, 16) : '');
+    setEditEndDate(tournament.endDate ? tournament.endDate.slice(0, 16) : '');
+    setEditMaxPlayers(String(tournament.maxPlayers));
+    setEditError('');
+    setEditingTournament(true);
+  }
+
+  async function handleSaveTournament() {
+    if (!id) return;
+    setEditError('');
+    setSavingEdit(true);
+    try {
+      await updateTournament(id, {
+        name: editName,
+        location: editLocation,
+        startDate: editStartDate || null,
+        endDate: editEndDate || null,
+        maxPlayers: editMaxPlayers ? Number(editMaxPlayers) : undefined,
+      });
+      setEditingTournament(false);
+      await load();
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setSavingEdit(false);
+    }
   }
 
   async function handleSavePrivacy() {
@@ -366,6 +414,12 @@ export default function TournamentDetailPage() {
               className="text-sm bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-4 py-2 rounded-md transition-colors">
               Privacidad
             </button>
+            {tournament.status !== 'CANCELLED' && tournament.status !== 'FINISHED' && (
+              <button onClick={openTournamentEditor}
+                className="text-sm bg-brand-green/10 border border-brand-green/30 text-brand-green hover:bg-brand-green/20 px-4 py-2 rounded-md transition-colors">
+                Editar torneo
+              </button>
+            )}
           </div>
         )}
 
@@ -412,6 +466,82 @@ export default function TournamentDetailPage() {
               </button>
               <button
                 onClick={() => { setEditingPrivacy(false); setPrivacyError(''); setPrivacyPassword(''); }}
+                className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isOrganizer && editingTournament && (
+          <div className="mt-4 p-4 bg-brand-surface-2 border border-brand-green/30 rounded-lg space-y-3">
+            <h3 className="text-sm font-semibold text-brand-green">Editar torneo</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-gray-400 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => { setEditName(e.target.value); if (editError) setEditError(''); }}
+                  className="input-field text-sm w-full"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-gray-400 mb-1">Ubicación</label>
+                <input
+                  type="text"
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  className="input-field text-sm w-full"
+                  placeholder="Opcional"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Fecha de inicio</label>
+                <input
+                  type="datetime-local"
+                  value={editStartDate}
+                  onChange={(e) => setEditStartDate(e.target.value)}
+                  className="input-field text-sm w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Fecha de fin</label>
+                <input
+                  type="datetime-local"
+                  value={editEndDate}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                  className="input-field text-sm w-full"
+                />
+              </div>
+              {tournament.status === 'OPEN' && (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Plazas máximas</label>
+                  <input
+                    type="number"
+                    min={2}
+                    value={editMaxPlayers}
+                    onChange={(e) => setEditMaxPlayers(e.target.value)}
+                    className="input-field text-sm w-full"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Debe ser potencia de 2 (2, 4, 8, 16…)</p>
+                </div>
+              )}
+            </div>
+            {editError && (
+              <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded px-2 py-1">{editError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveTournament}
+                disabled={savingEdit || !editName.trim()}
+                className="text-sm bg-brand-green/20 border border-brand-green/50 text-brand-green hover:bg-brand-green/30 px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingEdit ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+              <button
+                onClick={() => { setEditingTournament(false); setEditError(''); }}
                 className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
               >
                 Cancelar
@@ -511,7 +641,7 @@ export default function TournamentDetailPage() {
                       </div>
 
                       {m.scheduledDate && (
-                        <p className="text-xs text-blue-400 mt-2">Fecha programada: {fmtDate(m.scheduledDate)}</p>
+                        <p className="text-xs text-blue-400 mt-2">Fecha programada: {fmtDateTime(m.scheduledDate)}</p>
                       )}
                       {m.score && <p className="text-xs text-gray-400 mt-2">Marcador: {m.score}</p>}
                       {m.status === 'CONFIRMED' && m.winner && (
@@ -533,21 +663,21 @@ export default function TournamentDetailPage() {
                         <div className="mt-3">
                           {scheduleMatchId === m.id ? (
                             <div className="flex items-center gap-2">
-                              <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)}
-                                min={tournament.startDate ? tournament.startDate.split('T')[0] : undefined}
-                                max={tournament.endDate ? tournament.endDate.split('T')[0] : undefined}
+                              <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)}
+                                min={tournament.startDate ? tournament.startDate.split('T')[0] + 'T00:00' : undefined}
+                                max={tournament.endDate ? tournament.endDate.split('T')[0] + 'T23:59' : undefined}
                                 className="text-xs input-field" />
                               <button onClick={() => run(async () => {
                                 await scheduleMatch(id!, m.id, scheduleDate);
                                 setScheduleMatchId(null);
                               })} disabled={!scheduleDate}
                                 className="text-xs bg-blue-500/20 border border-blue-500/50 text-blue-400 px-3 py-1 rounded hover:bg-blue-500/30 disabled:opacity-40 font-medium transition-colors">
-                                Guardar
+                                OK
                               </button>
                               <button onClick={() => setScheduleMatchId(null)} className="text-xs text-gray-500 hover:text-gray-400 font-medium transition-colors">Cancelar</button>
                             </div>
                           ) : (
-                            <button onClick={() => { setScheduleMatchId(m.id); setScheduleDate(m.scheduledDate ? m.scheduledDate.split('T')[0] : ''); }}
+                            <button onClick={() => { setScheduleMatchId(m.id); setScheduleDate(m.scheduledDate ? m.scheduledDate.slice(0, 16) : ''); }}
                               className="text-xs bg-brand-surface-3 border border-brand-border text-gray-400 hover:text-gray-300 px-3 py-1 rounded font-medium transition-colors">
                               {m.scheduledDate ? 'Cambiar fecha' : 'Programar fecha'}
                             </button>
