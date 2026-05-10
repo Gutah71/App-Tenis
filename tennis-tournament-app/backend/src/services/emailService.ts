@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 import prisma from '../lib/prisma';
+
+// Force IPv4 DNS resolution (Render free tier doesn't support IPv6)
+dns.setDefaultResultOrder('ipv4first');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -9,7 +13,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
-} as nodemailer.TransportOptions);
+});
 
 function baseTemplate(content: string): string {
   return `
