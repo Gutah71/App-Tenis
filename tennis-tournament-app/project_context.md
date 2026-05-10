@@ -2,7 +2,7 @@
 
 This project is a Tennis Tournament Management application built as a fullstack web app.
 
-It is developed as a structured educational project and must remain simple and maintainable.
+It is developed as a structured educational project and must remain simple and maintainable..
 
 ---
 
