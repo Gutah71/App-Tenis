@@ -1,19 +1,27 @@
-import nodemailer from 'nodemailer';
-import dns from 'dns';
 import prisma from '../lib/prisma';
 
-// Force IPv4 DNS resolution (Render free tier doesn't support IPv6)
-dns.setDefaultResultOrder('ipv4first');
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+async function brevoSend(payload: {
+  sender: { name: string; email: string };
+  to: { email: string }[];
+  subject: string;
+  htmlContent: string;
+  replyTo?: { email: string };
+}) {
+  const res = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY || '',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${body}`);
+  }
+}
 
 function baseTemplate(content: string): string {
   return `
@@ -59,16 +67,15 @@ function baseTemplate(content: string): string {
 }
 
 async function sendMail(to: string, subject: string, html: string) {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
-  // Check if the recipient has notifications enabled
+  if (!process.env.BREVO_API_KEY) return;
   const user = await prisma.user.findUnique({ where: { email: to }, select: { notificationsEnabled: true } });
   if (user && !user.notificationsEnabled) return;
   try {
-    await transporter.sendMail({
-      from: `"TennisTournament" <${process.env.GMAIL_USER}>`,
-      to,
+    await brevoSend({
+      sender: { name: 'TennisTournament', email: process.env.BREVO_SENDER || 'tennistournamenttfg@gmail.com' },
+      to: [{ email: to }],
       subject,
-      html,
+      htmlContent: html,
     });
   } catch (err) {
     console.error('[EmailService] Error enviando correo:', err);
@@ -248,7 +255,7 @@ export async function sendLeagueAnnouncementEmail(
 // ─── Contact form ─────────────────────────────────────────────────────────────
 
 export async function sendContactEmail(senderName: string, senderEmail: string, message: string) {
-  if (!process.env.GMAIL_USER) return;
+  if (!process.env.BREVO_API_KEY) return;
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;font-size:22px;color:#22c55e;font-weight:700;">Nuevo mensaje de contacto</h1>
     <p style="margin:0 0 20px;font-size:15px;color:#9ca3af;">Has recibido un nuevo mensaje desde el formulario de contacto de TennisTournament.</p>
@@ -263,11 +270,15 @@ export async function sendContactEmail(senderName: string, senderEmail: string, 
       </table>
     </div>
   `);
-  await transporter.sendMail({
-    from: `"TennisTournament Contact" <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_USER,
-    replyTo: senderEmail,
-    subject: `Contacto de ${senderName} — TennisTournament`,
-    html,
-  });
+  try {
+    await brevoSend({
+      sender: { name: 'TennisTournament Contact', email: process.env.BREVO_SENDER || 'tennistournamenttfg@gmail.com' },
+      to: [{ email: process.env.CONTACT_EMAIL || 'tennistournamenttfg@gmail.com' }],
+      replyTo: { email: senderEmail },
+      subject: `Contacto de ${senderName} — TennisTournament`,
+      htmlContent: html,
+    });
+  } catch (err) {
+    console.error('[EmailService] Error enviando correo de contacto:', err);
+  }
 }
