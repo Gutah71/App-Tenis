@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { listLeagues, createLeague, joinLeague } from '../services/leagueService';
+import { listLeagues, joinLeague } from '../services/leagueService';
 import { useAuth } from '../context/AuthContext';
 import type { League } from '../types';
 
@@ -9,16 +9,10 @@ export default function LeaguesPage() {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newDescription, setNewDescription] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
   const [joinPasswordId, setJoinPasswordId] = useState<string | null>(null);
   const [joinPassword, setJoinPassword] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joining, setJoining] = useState(false);
-  const [newIsPrivate, setNewIsPrivate] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const [search, setSearch] = useState('');
   const [privacyFilter, setPrivacyFilter] = useState<'ALL' | 'PUBLIC' | 'PRIVATE'>('ALL');
 
@@ -30,15 +24,6 @@ export default function LeaguesPage() {
   }
 
   useEffect(() => { void load(); }, []);
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName.trim()) return;
-    setCreating(true);
-    try { await createLeague(newName.trim(), newIsPrivate, newIsPrivate ? newPassword : undefined); setNewName(''); setNewDescription(''); setNewIsPrivate(false); setNewPassword(''); setFormOpen(false); await load(); }
-    catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error'); }
-    finally { setCreating(false); }
-  }
 
   async function handleJoin(id: string, password?: string) {
     setJoinError('');
@@ -76,81 +61,16 @@ export default function LeaguesPage() {
           <p className="section-subtitle">Únete a una liga y compite con otros jugadores</p>
         </div>
         {isAuthenticated && user?.role === 'ORGANIZER' && (
-          <button
-            onClick={() => setFormOpen(!formOpen)}
+          <Link
+            to="/leagues/new"
             className="btn-primary whitespace-nowrap"
           >
             Crear Liga
-          </button>
+          </Link>
         )}
       </div>
 
       {error && <div className="card mb-6 text-red-500 text-sm">{error}</div>}
-
-      {formOpen && (
-        <div className="card mb-8">
-          <form onSubmit={handleCreate} className="space-y-5">
-            <div>
-              <label className="label">Nombre de la Liga</label>
-              <input
-                type="text"
-                placeholder="Ej: Liga Profesional de Tenis"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="input-field"
-                required
-              />
-            </div>
-            <div>
-              <label className="label">Descripción (opcional)</label>
-              <textarea
-                placeholder="Describe la finalidad de la liga..."
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                className="input-field resize-none"
-                rows={3}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={newIsPrivate} onChange={(e) => { setNewIsPrivate(e.target.checked); if (!e.target.checked) setNewPassword(''); }}
-                  className="sr-only peer" />
-                <div className="w-9 h-5 bg-brand-surface-3 border border-brand-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-green peer-checked:after:bg-white"></div>
-              </label>
-              <span className="text-sm text-gray-300">Liga privada</span>
-            </div>
-            {newIsPrivate && (
-              <div>
-                <label className="label">Contraseña</label>
-                <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                  className="input-field" placeholder="Contraseña para unirse" />
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={creating}
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {creating ? 'Creando...' : 'Crear Liga'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setFormOpen(false);
-                  setNewName('');
-                  setNewDescription('');
-                  setNewIsPrivate(false);
-                  setNewPassword('');
-                }}
-                className="px-4 py-2 rounded-lg border border-brand-border text-gray-400 hover:text-white hover:border-brand-border-light transition-colors font-medium"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {leagues.length > 0 && (
         <div className="card mb-6">

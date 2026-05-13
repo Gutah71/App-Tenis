@@ -69,7 +69,7 @@ export default function MyLeaguesPage() {
           </svg>
           <p className="text-gray-400 mb-6">{isOrganizer ? 'No has creado ninguna liga todavía' : 'Aún no perteneces a ninguna liga'}</p>
           <Link
-            to="/leagues"
+            to={isOrganizer ? '/leagues/new' : '/leagues'}
             className="btn-primary inline-flex items-center gap-2"
           >
             {isOrganizer ? 'Crear primera liga' : 'Explorar ligas'}
