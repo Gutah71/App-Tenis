@@ -82,7 +82,7 @@ export default function LeagueDetailPage() {
     if (!id || !confirm('¿Eliminar esta liga? Todos los torneos y datos se perderán.')) return;
     try {
       await deleteLeague(id);
-      navigate('/leagues');
+      navigate('/my-leagues');
     } catch (e: unknown) {
       setActionError(e instanceof Error ? e.message : 'Error al eliminar');
     }
